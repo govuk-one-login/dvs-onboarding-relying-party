@@ -1,0 +1,68 @@
+default_language_version:
+  golang: 1.24.5
+exclude: |
+  (?x)^(
+      .*/test/.*/.*\.approved.json|
+      .*/docs(/.*)?$|
+      .*/standards(/.*)?$
+  )$
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-added-large-files
+      - id: mixed-line-ending
+      - id: check-executables-have-shebangs
+      - id: check-symlinks
+      - id: destroyed-symlinks
+
+  - repo: https://github.com/aws-cloudformation/cfn-lint
+    rev: v1.25.1
+    hooks:
+      - id: cfn-lint
+        exclude: "\
+          ^(ci|.github|http|openAPI)/.*|\
+          dynamodb.local.yml|\
+          .pre-commit-config.yaml|"
+        files: ^.*\.(yml|yaml)$
+
+  - repo: local
+    hooks:
+      - id: sam-validate
+        name: SAM validate with lint
+        entry: bash
+        args:
+          - -c
+          - export GITHUB_WORKSPACE=$(pwd) && sam validate --lint -t template.yaml
+        language: system
+        pass_filenames: false
+        files: "^template.yaml$"
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        exclude: package.lock.json
+  - repo: local
+    hooks:
+      - id: tflint
+        name: tflint
+        entry: bash
+        args:
+          - -c
+          - tflint --init && tflint --recursive --format compact --chdir infra --fix
+        language: system
+        pass_filenames: false
+        files: "^infra/"
+  - repo: local
+    hooks:
+      - id: lint-fix
+        name: lint-fix
+        entry: bash
+        args:
+          - -c
+          - npm run lint:fix
+        language: system
+        pass_filenames: false
+        files: ^.*\.ts$

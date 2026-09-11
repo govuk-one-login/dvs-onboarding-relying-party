@@ -1,0 +1,18 @@
+# Dependency directories
+node_modules/
+
+# Build directories
+dist/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Additional ignores
+.idea
+.DS_Store

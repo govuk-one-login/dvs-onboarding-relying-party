@@ -1,0 +1,22 @@
+{
+  "name": "dvs-onboarding-relying-party",
+  "version": "1.0.0",
+  "license": "ISC",
+  "type": "module",
+  "engines": {
+    "node": ">=24.14.0 <25"
+  },
+  "scripts": {
+    "lint": "prettier  \"*/**/*.{ts,json}\" --check; eslint . ",
+    "lint:fix": "prettier  \"*/**/*.{ts,json}\" --write; eslint . --fix"
+  },
+  "devDependencies": {
+    "@eslint/compat": "^2.1.1",
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.10.0",
+    "jiti": "^2.7.0",
+    "prettier": "^3.9.6",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.70.0"
+  }
+}

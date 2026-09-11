@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "module": "nodenext",
+    "target": "ESNext",
+    "moduleResolution": "nodenext",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "outDir": "dist",
+    "rootDir": "src",
+    "typeRoots": ["./@types", "./node_modules/@types", "./node_modules"],
+  },
+  "include": ["src/**/*"],
+  "exclude": ["tests/ui-tests, src/**/*.test.ts"]
+}
