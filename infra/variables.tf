@@ -24,3 +24,9 @@ variable "owner_email" {
   description = "The owning team's Google Group email address. Used for tagging and ECR scan notifications"
   default     = "di-orchestration@digital.cabinet-office.gov.uk"
 }
+
+variable "create_build_stacks" {
+  type        = bool
+  description = "Whether or not to deploy the stacks for building and signing application code. Only needed in dev and build. Defaults to false"
+  default     = false
+}
