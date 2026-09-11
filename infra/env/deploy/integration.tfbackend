@@ -1,0 +1,3 @@
+bucket = "di-dvs-rp-integration-tfstate"
+key    = "dvs-rp.tfstate"
+region = "eu-west-2"
