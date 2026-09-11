@@ -8,7 +8,9 @@
   },
   "scripts": {
     "lint": "prettier  \"*/**/*.{ts,json}\" --check; eslint . ",
-    "lint:fix": "prettier  \"*/**/*.{ts,json}\" --write; eslint . --fix"
+    "lint:fix": "prettier  \"*/**/*.{ts,json}\" --write; eslint . --fix",
+    "tflint": "tflint --init && tflint --recursive --format compact --chdir infra",
+    "tflint:fix": "tflint --init && tflint --recursive --format compact --chdir infra --fix"
   },
   "devDependencies": {
     "@eslint/compat": "^2.1.1",
