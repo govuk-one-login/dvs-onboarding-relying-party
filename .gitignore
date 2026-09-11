@@ -13,6 +13,10 @@ dist/
 # Optional eslint cache
 .eslintcache
 
+# Terraform outputs
+infra/.terraform
+infra/.terraform.lock.hcl
+
 # Additional ignores
 .idea
 .DS_Store
