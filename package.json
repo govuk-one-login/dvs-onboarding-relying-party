@@ -10,7 +10,8 @@
     "lint": "prettier  \"*/**/*.{ts,json}\" --check; eslint . ",
     "lint:fix": "prettier  \"*/**/*.{ts,json}\" --write; eslint . --fix",
     "tflint": "tflint --init && tflint --recursive --format compact --chdir infra",
-    "tflint:fix": "tflint --init && tflint --recursive --format compact --chdir infra --fix"
+    "tflint:fix": "tflint --init && tflint --recursive --format compact --chdir infra --fix",
+    "test:unit": "vitest --run"
   },
   "devDependencies": {
     "@eslint/compat": "^2.1.1",
@@ -19,6 +20,7 @@
     "jiti": "^2.7.0",
     "prettier": "^3.9.6",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.70.0"
+    "typescript-eslint": "^8.70.0",
+    "vitest": "^5.0.0"
   }
 }
