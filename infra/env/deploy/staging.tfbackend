@@ -1,0 +1,3 @@
+bucket = "di-dvs-rp-staging-tfstate"
+key    = "dvs-rp.tfstate"
+region = "eu-west-2"
