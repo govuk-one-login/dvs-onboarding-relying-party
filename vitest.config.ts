@@ -1,0 +1,15 @@
+import { defineConfig } from "vitest/config";
+
+export default defineConfig({
+  test: {
+    include: ["src/**/*.test.ts"],
+    expect: {
+      requireAssertions: true,
+    },
+    coverage: {
+      include: ["src/**/*.ts"],
+      reporter: ["lcov", "text"],
+    },
+    globals: true,
+  },
+});
