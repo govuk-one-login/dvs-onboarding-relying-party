@@ -30,3 +30,8 @@ variable "create_build_stacks" {
   description = "Whether or not to deploy the stacks for building and signing application code. Only needed in dev and build. Defaults to false"
   default     = false
 }
+
+variable "signer_allowed_accounts" {
+  type        = list(string)
+  description = "The AWS account IDs that can read the code signing KMS key"
+}
