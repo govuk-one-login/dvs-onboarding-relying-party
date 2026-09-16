@@ -11,7 +11,9 @@
     "lint:fix": "prettier  \"*/**/*.{ts,json}\" --write; eslint . --fix",
     "tflint": "tflint --init && tflint --recursive --format compact --chdir infra",
     "tflint:fix": "tflint --init && tflint --recursive --format compact --chdir infra --fix",
-    "test:unit": "vitest --run"
+    "test:unit": "vitest --run",
+    "dynamodblocal:up": "docker compose -f docker-compose.local.yml up -d",
+    "dynamodblocal:down": "docker compose -f docker-compose.local.yml down"
   },
   "devDependencies": {
     "@eslint/compat": "^2.1.1",
