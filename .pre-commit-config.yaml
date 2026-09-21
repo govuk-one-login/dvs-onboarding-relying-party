@@ -66,3 +66,14 @@ repos:
         language: system
         pass_filenames: false
         files: ^.*\.ts$
+  - repo: local
+    hooks:
+      - id: sam-validate
+        name: SAM validate with lint
+        entry: bash
+        args:
+          - -c
+          - export GITHUB_WORKSPACE=$(pwd) && sam validate --lint -t template.yaml
+        language: system
+        pass_filenames: false
+        files: "^template.yaml$"
