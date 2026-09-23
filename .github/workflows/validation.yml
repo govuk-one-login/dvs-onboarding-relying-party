@@ -9,6 +9,7 @@ on:
 jobs:
   validation-checks:
     permissions:
+      id-token: write
       contents: read
     name: Validation checks
     runs-on: ubuntu-22.04
@@ -35,3 +36,11 @@ jobs:
 
       - name: Lint Terraform
         run: npm run tflint
+
+      - name: Set up SAM cli
+        uses: aws-actions/setup-sam@89ddb14d60e682855e3fea4be85b3c56485de310 # v3
+        with:
+          use-installer: true
+
+      - name: SAM validate
+        run: sam validate -t template.yaml --lint
