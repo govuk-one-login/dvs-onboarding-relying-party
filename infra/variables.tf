@@ -34,4 +34,5 @@ variable "create_build_stacks" {
 variable "signer_allowed_accounts" {
   type        = list(string)
   description = "The AWS account IDs that can read the code signing KMS key"
+  default     = []
 }
