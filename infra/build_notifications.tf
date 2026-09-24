@@ -4,7 +4,7 @@ resource "aws_cloudformation_stack" "build_notifications_stack" {
   template_url = "https://template-storage-templatebucket-1upzyw6v9cs42.s3.amazonaws.com/build-notifications/template.yaml"
 
   parameters = {
-    InitialNotificationStack        = var.environment == "build" ? "No" : "Yes"
+    InitialNotificationStack        = var.environment == "build" || var.environment == "production" ? "No" : "Yes" # Had to disable this in build and prod because of stack deployment issues
     BuildNotificationSlackChannelId = var.environment == "production" ? "C0C469LR76C" : "C0C35MTD9M1"
     EnrichedNotifications           = "True"
   }
