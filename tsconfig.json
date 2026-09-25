@@ -9,10 +9,9 @@
     "skipLibCheck": true,
     "sourceMap": true,
     "outDir": "dist",
-    "rootDir": "src",
     "typeRoots": ["./@types", "./node_modules/@types", "./node_modules"],
-    "types": ["vitest/globals"]
+    "types": ["vitest/globals", "node"]
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "integration-tests/*"],
   "exclude": ["tests/ui-tests, src/**/*.test.ts"]
 }
