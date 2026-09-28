@@ -36,3 +36,15 @@ variable "signer_allowed_accounts" {
   description = "The AWS account IDs that can read the code signing KMS key"
   default     = []
 }
+
+variable "transit_gateway_hub_account_id" {
+  type        = string
+  description = "The account ID of the account containing the Transit Gateway hub"
+}
+
+variable "transit_gateway_hub_dr_account_id" {
+  type        = string
+  description = "The account ID of the account containing the disaster recovery Transit Gateway hub. Should only be set in production or in accounts where we're testing a DR scenario"
+  # This default matches the default value in the Transit Gateway Cross account role template
+  default = "none"
+}
