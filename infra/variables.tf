@@ -88,3 +88,8 @@ variable "container_signer_kms_key_arn" {
   description = "The ARN of the KMS key that signs test container images"
   default     = "none"
 }
+variable "github_repository_id" {
+  type        = string
+  description = "The ID of the GitHub repository"
+  default     = "105353241"
+}
