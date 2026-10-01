@@ -37,6 +37,16 @@ variable "signer_allowed_accounts" {
   default     = []
 }
 
+variable "signing_profile_arn" {
+  type        = string
+  description = "The ARN of the signing profile used to sign Lambda code. This is the shared profile deployed in build from the signer stack"
+}
+
+variable "signing_profile_version_arn" {
+  type        = string
+  description = "The ARN of the signing profile version used to sign Lambda code. This is the shared profile deployed in build from the signer stack"
+}
+
 variable "transit_gateway_hub_account_id" {
   type        = string
   description = "The account ID of the account containing the Transit Gateway hub"
@@ -47,4 +57,34 @@ variable "transit_gateway_hub_dr_account_id" {
   description = "The account ID of the account containing the disaster recovery Transit Gateway hub. Should only be set in production or in accounts where we're testing a DR scenario"
   # This default matches the default value in the Transit Gateway Cross account role template
   default = "none"
+}
+
+variable "api_artifact_source_bucket_arn" {
+  type        = string
+  description = "The ARN of the promotion bucket from the previous environment's API pipeline"
+  default     = "none"
+}
+
+variable "api_artifact_source_bucket_event_trigger_role_arn" {
+  type        = string
+  description = "The ARN of the role to assume for promotion events from the previous environment's API pipeline"
+  default     = "none"
+}
+
+variable "repository_name" {
+  type        = string
+  description = "The Github repository name"
+  default     = "relying-party-configuration"
+}
+
+variable "allowed_promotion_accounts" {
+  type        = list(string)
+  description = "The AWS account IDs that this pipeline will promote to. Maximum 2 accounts"
+  default     = []
+}
+
+variable "container_signer_kms_key_arn" {
+  type        = string
+  description = "The ARN of the KMS key that signs test container images"
+  default     = "none"
 }
