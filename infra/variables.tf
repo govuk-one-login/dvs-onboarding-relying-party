@@ -74,7 +74,7 @@ variable "api_artifact_source_bucket_event_trigger_role_arn" {
 variable "repository_name" {
   type        = string
   description = "The Github repository name"
-  default     = "relying-party-configuration"
+  default     = "dvs-onboarding-relying-party"
 }
 
 variable "allowed_promotion_accounts" {
@@ -91,5 +91,5 @@ variable "container_signer_kms_key_arn" {
 variable "github_repository_id" {
   type        = string
   description = "The ID of the GitHub repository"
-  default     = "105353241"
+  default     = "1365694725"
 }

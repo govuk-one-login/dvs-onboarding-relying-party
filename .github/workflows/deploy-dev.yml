@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   deploy-api-dev:
-    uses: ./.github/workflows/deploy-api.yml
+    uses: ./.github/workflows/deploy.yml
     secrets:
       GH_ACTIONS_ROLE_ARN: ${{ secrets.DEV_GH_ACTIONS_ROLE_ARN }}
       ARTIFACT_BUCKET_NAME: ${{ secrets.DEV_ARTIFACT_BUCKET_NAME }}
