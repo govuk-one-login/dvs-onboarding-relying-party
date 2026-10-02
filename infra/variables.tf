@@ -74,7 +74,7 @@ variable "api_artifact_source_bucket_event_trigger_role_arn" {
 variable "repository_name" {
   type        = string
   description = "The Github repository name"
-  default     = "relying-party-configuration"
+  default     = "dvs-onboarding-relying-party"
 }
 
 variable "allowed_promotion_accounts" {
