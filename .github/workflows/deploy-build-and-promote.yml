@@ -1,0 +1,48 @@
+name: Deploy API Build and Promote
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  id-token: write
+  contents: read
+  security-events: write
+  actions: read
+
+jobs:
+  unit-tests:
+    uses: ./.github/workflows/unit-tests.yml
+
+  integration-tests:
+    uses: ./.github/workflows/integration-tests.yml
+
+  sonarcloud:
+    uses: ./.github/workflows/sonar-scan.yml
+    secrets:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  terraform-checks:
+    uses: ./.github/workflows/terraform-checks.yml
+
+  checkov:
+    uses: ./.github/workflows/checkov.yml
+
+  validation:
+    uses: ./.github/workflows/validation.yml
+
+  deploy:
+    uses: ./.github/workflows/deploy.yml
+    needs:
+      - unit-tests
+      - integration-tests
+      - sonarcloud
+      - terraform-checks
+      - checkov
+      - validation
+    secrets:
+      GH_ACTIONS_ROLE_ARN: ${{ secrets.GH_ACTIONS_ROLE_ARN }}
+      ARTIFACT_BUCKET_NAME: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME }}
+      SIGNING_PROFILE_NAME: ${{ secrets.SIGNING_PROFILE_NAME }}
+      CONTAINER_SIGN_KMS_KEY: ${{ secrets.CONTAINER_SIGN_KMS_KEY }}

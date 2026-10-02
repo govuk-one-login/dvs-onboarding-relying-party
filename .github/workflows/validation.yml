@@ -3,8 +3,7 @@ name: Validation
 permissions: {}
 
 on:
-  pull_request:
-  merge_group:
+  workflow_call:
 
 jobs:
   validation-checks:

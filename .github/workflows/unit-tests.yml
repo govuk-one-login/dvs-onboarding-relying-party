@@ -3,8 +3,7 @@ name: Unit tests
 permissions: {}
 
 on:
-  pull_request:
-  merge_group:
+  workflow_call:
 
 jobs:
   unit-test:

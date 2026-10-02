@@ -3,8 +3,7 @@ name: Integration tests
 permissions: {}
 
 on:
-  pull_request:
-  merge_group:
+  workflow_call:
 
 jobs:
   integration-test:
