@@ -1,4 +1,5 @@
 environment                                       = "staging"
+short-environment                                 = "staging"
 transit_gateway_hub_account_id                    = "208182292933"
 allowed_promotion_accounts                        = ["327745427323", "419187349091"]
 signing_profile_arn                               = "arn:aws:signer:eu-west-2:272588486093:/signing-profiles/SigningProfile_BDvxuNCSmhLh"

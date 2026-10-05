@@ -1,10 +1,10 @@
 resource "aws_cloudformation_stack" "dvs_rp_pipeline_stack" {
-  name         = "${var.environment}-dvs-rp-pipeline"
+  name         = "${var.short-environment}-dvs-rp-pipeline"
   template_url = "https://template-storage-templatebucket-1upzyw6v9cs42.s3.amazonaws.com/sam-deploy-pipeline/template.yaml"
   capabilities = ["CAPABILITY_NAMED_IAM", "CAPABILITY_AUTO_EXPAND"]
 
   parameters = {
-    SAMStackName                            = "${var.environment}-dvs-rp-deploy"
+    SAMStackName                            = "${var.short-environment}-dvs-rp-deploy"
     Environment                             = var.environment
     VpcStackName                            = "vpc"
     SigningProfileArn                       = var.signing_profile_arn

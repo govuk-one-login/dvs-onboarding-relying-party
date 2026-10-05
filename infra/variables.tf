@@ -7,6 +7,15 @@ variable "environment" {
   }
 }
 
+variable "short-environment" {
+  type        = string
+  description = "The short environment name"
+  validation {
+    condition     = contains(["dev", "build", "staging", "int", "prod"], var.short-environment)
+    error_message = "Valid values for var: short-environment are (dev, build, staging, int, prod)"
+  }
+}
+
 variable "system" {
   type        = string
   description = "The name of the system. Used in tags."
