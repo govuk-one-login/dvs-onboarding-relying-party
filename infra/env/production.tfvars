@@ -1,4 +1,8 @@
-environment                       = "production"
-transit_gateway_hub_account_id    = "510900712898"
-transit_gateway_hub_dr_account_id = "748599135734"
-use_dr_transit_gateway            = false
+environment                                       = "production"
+transit_gateway_hub_account_id                    = "510900712898"
+transit_gateway_hub_dr_account_id                 = "748599135734"
+use_dr_transit_gateway                            = false
+signing_profile_arn                               = "arn:aws:signer:eu-west-2:272588486093:/signing-profiles/SigningProfile_BDvxuNCSmhLh"
+signing_profile_version_arn                       = "arn:aws:signer:eu-west-2:272588486093:/signing-profiles/SigningProfile_BDvxuNCSmhLh/2XJNLV95D0"
+api_artifact_source_bucket_arn                    = "arn:aws:s3:::staging-dvs-rp-pipeline-artifactpromotionbucket-s26opkwtpfft"
+api_artifact_source_bucket_event_trigger_role_arn = "arn:aws:iam::015048356703:role/PL-staging-dvs-rp-pipeline-PromoTrigRole-0afffd07059b"

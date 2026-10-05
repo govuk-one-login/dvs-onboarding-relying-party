@@ -13,13 +13,13 @@ resource "aws_cloudformation_stack" "dvs_rp_pipeline_stack" {
     ArtifactSourceBucketArn                 = var.api_artifact_source_bucket_arn
     ArtifactSourceBucketEventTriggerRoleArn = var.api_artifact_source_bucket_event_trigger_role_arn
     GitHubRepositoryName                    = var.create_build_stacks ? var.repository_name : "none"
-    IncludePromotion                        = contains(["build"], var.environment) ? "Yes" : "No" # TODO: Update to include staging in the future!
+    IncludePromotion                        = contains(["build", "staging"], var.environment) ? "Yes" : "No"
     AllowedAccounts                         = join(",", var.allowed_promotion_accounts)
     BuildNotificationStackName              = "build-notifications"
     SlackNotificationType                   = var.environment == "dev" ? "None" : "Failures"
     AllowedServiceOne                       = "DynamoDB"
     ProgrammaticPermissionsBoundary         = "True"
-    GitHubRepositoryID                      = var.create_build_stacks ? var.github_repository_id : "none"
+    GitHubRepositoryID                      = var.create_build_stacks ? var.github_repository_id : ""
   }
 
 
