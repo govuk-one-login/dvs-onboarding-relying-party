@@ -1,4 +1,5 @@
 environment                                       = "integration"
+short-environment                                 = "int"
 transit_gateway_hub_account_id                    = "844682013702"
 signing_profile_arn                               = "arn:aws:signer:eu-west-2:272588486093:/signing-profiles/SigningProfile_BDvxuNCSmhLh"
 signing_profile_version_arn                       = "arn:aws:signer:eu-west-2:272588486093:/signing-profiles/SigningProfile_BDvxuNCSmhLh/2XJNLV95D0"
