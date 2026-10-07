@@ -102,3 +102,7 @@ variable "github_repository_id" {
   description = "The ID of the GitHub repository"
   default     = "1365694725"
 }
+variable "domain_name" {
+  type        = string
+  description = "Domain of the application"
+}
