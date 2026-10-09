@@ -9,10 +9,10 @@ signing_profile_version_arn    = "arn:aws:signer:eu-west-2:646251771923:/signing
 domain_name                    = "dvs.dev.account.gov.uk"
 
 # Stack version pinning
-pipeline_stack_version                 = "v2.119.0"
-vpc_stack_version                      = "v4.0.0"
+pipeline_stack_version                 = "v2.121.1"
+vpc_stack_version                      = "v4.0.1"
 transit_gateway_role_stack_version     = "v2.0.2"
-build_notification_stack_version       = "v2.9.1"
+build_notification_stack_version       = "v2.10.0"
 api_gateway_logs_stack_version         = "v1.0.11"
 container_signer_stack_version         = "v1.1.8"
 signer_stack_version                   = "v1.0.14"
