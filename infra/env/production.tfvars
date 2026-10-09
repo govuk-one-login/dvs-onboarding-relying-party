@@ -8,3 +8,10 @@ signing_profile_version_arn                       = "arn:aws:signer:eu-west-2:27
 api_artifact_source_bucket_arn                    = "arn:aws:s3:::staging-dvs-rp-pipeline-artifactpromotionbucket-s26opkwtpfft"
 api_artifact_source_bucket_event_trigger_role_arn = "arn:aws:iam::015048356703:role/PL-staging-dvs-rp-pipeline-PromoTrigRole-0afffd07059b"
 domain_name                                       = "dvs.account.gov.uk"
+
+# Stack version pinning
+pipeline_stack_version             = "v2.121.0"
+vpc_stack_version                  = "v4.0.0"
+transit_gateway_role_stack_version = "v2.0.2"
+build_notification_stack_version   = "v2.9.1"
+api_gateway_logs_stack_version     = "v1.0.11"

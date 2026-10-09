@@ -8,3 +8,13 @@ allowed_promotion_accounts     = ["015048356703"]
 signing_profile_arn            = "arn:aws:signer:eu-west-2:272588486093:/signing-profiles/SigningProfile_BDvxuNCSmhLh"
 signing_profile_version_arn    = "arn:aws:signer:eu-west-2:272588486093:/signing-profiles/SigningProfile_BDvxuNCSmhLh/2XJNLV95D0"
 domain_name                    = "dvs.build.account.gov.uk"
+
+# Stack version pinning
+pipeline_stack_version                 = "v2.121.0"
+vpc_stack_version                      = "v4.0.0"
+transit_gateway_role_stack_version     = "v2.0.2"
+build_notification_stack_version       = "v2.9.1"
+api_gateway_logs_stack_version         = "v1.0.11"
+container_signer_stack_version         = "v1.1.8"
+signer_stack_version                   = "v1.0.14"
+github_identity_provider_stack_version = "v1.1.7"
