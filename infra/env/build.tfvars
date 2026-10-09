@@ -7,4 +7,4 @@ container_signer_kms_key_arn   = "arn:aws:kms:eu-west-2:272588486093:key/3ee68c5
 allowed_promotion_accounts     = ["015048356703"]
 signing_profile_arn            = "arn:aws:signer:eu-west-2:272588486093:/signing-profiles/SigningProfile_BDvxuNCSmhLh"
 signing_profile_version_arn    = "arn:aws:signer:eu-west-2:272588486093:/signing-profiles/SigningProfile_BDvxuNCSmhLh/2XJNLV95D0"
-domain_name                    = "build.dvs.account.gov.uk"
+domain_name                    = "dvs.build.account.gov.uk"

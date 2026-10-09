@@ -4,8 +4,8 @@ Description: "Route53 Hosted Zone"
 Parameters:
   DomainName:
     Type: String
-    Description: Domain name for the hosted zone. Must end in dvs.account.gov.uk
-    AllowedPattern: ^(.*\.)?dvs.account.gov.uk$
+    Description: Domain name for the hosted zone. Must end in dvs.account.gov.uk or be dvs.${env}.account.gov.uk
+    AllowedPattern: ^dvs.(.*\.)?account.gov.uk$
 
 Resources:
   HostedZone:
