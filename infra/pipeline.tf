@@ -1,6 +1,6 @@
 resource "aws_cloudformation_stack" "dvs_rp_pipeline_stack" {
   name         = "${var.short-environment}-dvs-rp-pipeline"
-  template_url = "https://template-storage-templatebucket-1upzyw6v9cs42.s3.amazonaws.com/sam-deploy-pipeline/template.yaml"
+  template_url = "https://template-storage-templatebucket-1upzyw6v9cs42.s3.amazonaws.com/sam-deploy-pipeline/template-${var.pipeline_stack_version}.yaml"
   capabilities = ["CAPABILITY_NAMED_IAM", "CAPABILITY_AUTO_EXPAND"]
 
   parameters = {
