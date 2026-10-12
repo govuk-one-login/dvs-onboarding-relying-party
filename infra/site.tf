@@ -19,3 +19,17 @@ provider "aws" {
     }
   }
 }
+
+provider "aws" {
+  alias  = "virginia"
+  region = "us-east-1"
+
+  default_tags {
+    tags = {
+      Product     = var.product
+      System      = var.system
+      Environment = var.environment
+      Owner       = var.owner_email
+    }
+  }
+}

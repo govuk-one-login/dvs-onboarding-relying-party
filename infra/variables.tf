@@ -146,3 +146,8 @@ variable "api_gateway_logs_stack_version" {
   type        = string
   description = "Version number of the api gateway logs stack to use. Must be a semantic version formatted like the following: v2.7.1"
 }
+
+variable "certificate_stack_version" {
+  type        = string
+  description = "Version number of the certificate stacks to use. Must be a semantic version formatted like the following: v2.7.1"
+}
