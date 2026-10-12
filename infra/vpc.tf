@@ -1,7 +1,7 @@
 resource "aws_cloudformation_stack" "vpc_stack" {
   # See https://govukverify.atlassian.net/wiki/x/YoGDVgE
   name         = "vpc"
-  template_url = "https://template-storage-templatebucket-1upzyw6v9cs42.s3.eu-west-2.amazonaws.com/vpc/template.yaml"
+  template_url = "https://template-storage-templatebucket-1upzyw6v9cs42.s3.eu-west-2.amazonaws.com/vpc/template-${var.vpc_stack_version}.yaml"
 
   parameters = {
     VpcType     = "Spoke"

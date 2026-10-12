@@ -106,3 +106,43 @@ variable "domain_name" {
   type        = string
   description = "Domain of the application"
 }
+
+variable "build_notification_stack_version" {
+  type        = string
+  description = "Version number of the build notification stack to use. Must be a semantic version formatted like the following: v2.7.1"
+}
+
+variable "github_identity_provider_stack_version" {
+  type        = string
+  description = "Version number of the github identity provider stack to use. Must be a semantic version formatted like the following: v2.7.1"
+}
+
+variable "pipeline_stack_version" {
+  type        = string
+  description = "Version number of the sam deploy pipeline stack to use. Must be a semantic version formatted like the following: v2.7.1"
+}
+
+variable "container_signer_stack_version" {
+  type        = string
+  description = "Version number of the container signer stack to use. Must be a semantic version formatted like the following: v2.7.1"
+}
+
+variable "signer_stack_version" {
+  type        = string
+  description = "Version number of the signer stack to use. Must be a semantic version formatted like the following: v2.7.1"
+}
+
+variable "transit_gateway_role_stack_version" {
+  type        = string
+  description = "Version number of the transit gateway role stack to use. Must be a semantic version formatted like the following: v2.7.1"
+}
+
+variable "vpc_stack_version" {
+  type        = string
+  description = "Version number of the vpc stack to use. Must be a semantic version formatted like the following: v2.7.1"
+}
+
+variable "api_gateway_logs_stack_version" {
+  type        = string
+  description = "Version number of the api gateway logs stack to use. Must be a semantic version formatted like the following: v2.7.1"
+}
