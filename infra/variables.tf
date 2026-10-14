@@ -137,6 +137,11 @@ variable "certificate_stack_version" {
   description = "Version number of the certificate stacks to use. Must be a semantic version formatted like the following: v2.7.1"
 }
 
+variable "cloudfront_distribution_stack_version" {
+  type        = string
+  description = "Version number of the cloudfront distribution stack to use. Must be a semantic version formatted like the following: v2.7.1"
+}
+
 # These variables are only set and used in dev and build, so we need to default them in higher envs!
 variable "github_identity_provider_stack_version" {
   type        = string

@@ -24,9 +24,10 @@ export AWS_ACCESS_KEY_ID="****"
 export AWS_SECRET_ACCESS_KEY="****"
 export AWS_SESSION_TOKEN="****"
 
-terraform init -backend-config=env/deploy/build.tfbackend
-terraform plan -var-file=env/build.tfvars
-terraform apply -var-file=env/build.tfvars
+export ENVIRONMENT="build"
+terraform init -backend-config=env/deploy/$ENVIRONMENT.tfbackend
+terraform plan -var-file=env/$ENVIRONMENT.tfvars
+terraform apply -var-file=env/$ENVIRONMENT.tfvars
 ```
 
 > [!NOTE]
@@ -36,4 +37,4 @@ terraform apply -var-file=env/build.tfvars
 > You should re-run your command with the `-reconfigure` flag as we don't want
 > to migrate state between environments:
 >
-> `terraform init -backend-config=env/deploy/dev.tfbackend -reconfigure`
+> `terraform init -backend-config=env/deploy/$ENVIRONMENT.tfbackend -reconfigure`
