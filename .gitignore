@@ -23,3 +23,7 @@ infra/.terraform.lock.hcl
 
 # DynamoDBLocal
 docker/dynamodb/**
+
+# AWS SAM build directory
+build/**
+build.toml

@@ -28,6 +28,10 @@ Conditions:
       - Fn::Equals:
           - !Ref PermissionsBoundary
           - "none"
+  DeployAPIGateway: !Or [
+    !Equals [!Ref Environment, local],
+    !Equals [!Ref Environment, dev]
+  ]
 
 Globals:
   Function:
@@ -124,3 +128,37 @@ Resources:
           Value: JourneyResultTable
 
   #endregion
+
+  DvsRpApiGateway:
+    Condition: DeployAPIGateway
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub ${AWS::StackName}-ApiGateway
+      StageName: !Sub "${Environment}"
+      AlwaysDeploy: true
+
+  DummyLambda:
+    Condition: DeployAPIGateway
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: src/handlers/dummy-handler.handler
+      Runtime: nodejs24.x
+      Architectures:
+        - arm64
+      Events:
+        Get:
+          Type: Api
+          Properties:
+            RestApiId: !Ref DvsRpApiGateway
+            Path: /test
+            Method: get
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        EntryPoints:
+          - src/handlers/dummy-handler.ts
+        Minify: true
+        Sourcemap: true
+        Target: es2022
+        UseNpmCi: True
