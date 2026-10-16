@@ -84,6 +84,20 @@ Resources:
             Action: kms:*
             Resource: "*"
 
+  OidcSigningKmsKeyAccessPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: AllowSigningKms
+            Effect: Allow
+            Action:
+              - kms:Sign
+              - kms:GetPublicKey
+            Resource:
+              - !GetAtt OidcSigningKmsKey.Arn
+
   #endregion
   #region Journey Result DynamoDB Table
 
@@ -213,12 +227,12 @@ Resources:
         Types:
           - REGIONAL
 
-  DummyLambda:
+  JwksFunction:
     Condition: DeployAPIGateway
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: .
-      Handler: src/handlers/dummy-handler.handler
+      Handler: src/handlers/jwks.handler
       Runtime: nodejs24.x
       Architectures:
         - arm64
@@ -227,13 +241,19 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref DvsRpApiGateway
-            Path: /test
+            Path: /.well-known/jwks.json
             Method: get
+      Environment:
+        Variables:
+          ENVIRONMENT: !Sub ${Environment}
+          SIGNING_KEY_ALIAS: !Ref OidcSigningKmsKeyAlias
+      Policies:
+        - !Ref OidcSigningKmsKeyAccessPolicy
     Metadata:
       BuildMethod: esbuild
       BuildProperties:
         EntryPoints:
-          - src/handlers/dummy-handler.ts
+          - src/handlers/jwks.ts
         Minify: true
         Sourcemap: true
         Target: es2022
