@@ -21,7 +21,7 @@
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.1133.0",
     "@aws-sdk/client-kms": "^3.1152.0",
-    "@aws-sdk/lib-dynamodb": "^3.1133.0",
+    "@aws-sdk/lib-dynamodb": "^3.1151.0",
     "esbuild": "^0.28.2",
     "jose": "^6.2.12",
     "pino": "^10.4.0"
