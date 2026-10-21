@@ -56,6 +56,8 @@ Globals:
       - UsePermissionsBoundary
       - !Ref PermissionsBoundary
       - !Ref AWS::NoValue
+    Architectures:
+      - arm64
 
 Resources:
 
@@ -234,8 +236,6 @@ Resources:
       CodeUri: .
       Handler: src/handlers/jwks.handler
       Runtime: nodejs24.x
-      Architectures:
-        - arm64
       Events:
         Get:
           Type: Api
