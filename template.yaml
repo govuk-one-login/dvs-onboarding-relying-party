@@ -229,7 +229,7 @@ Resources:
         Types:
           - REGIONAL
 
-  JwksFunction:
+  JwksHandler:
     Condition: DeployAPIGateway
     Type: AWS::Serverless::Function
     Properties:
@@ -254,6 +254,42 @@ Resources:
       BuildProperties:
         EntryPoints:
           - src/handlers/jwks.ts
+        Minify: true
+        Sourcemap: true
+        Target: es2022
+        UseNpmCi: True
+
+  AuthorizeHandler:
+    Condition: DeployAPIGateway
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: src/handlers/authorize.handler
+      Runtime: nodejs24.x
+      Events:
+        Get:
+          Type: Api
+          Properties:
+            RestApiId: !Ref DvsRpApiGateway
+            Path: /authorize
+            Method: get
+        Post:
+          Type: Api
+          Properties:
+            RestApiId: !Ref DvsRpApiGateway
+            Path: /authorize
+            Method: post
+      Environment:
+        Variables:
+          ENVIRONMENT: !Sub ${Environment}
+          SIGNING_KEY_ALIAS: !Ref OidcSigningKmsKeyAlias
+      Policies:
+        - !Ref OidcSigningKmsKeyAccessPolicy
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        EntryPoints:
+          - src/handlers/authorize.ts
         Minify: true
         Sourcemap: true
         Target: es2022
