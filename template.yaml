@@ -234,6 +234,7 @@ Resources:
     Condition: DeployAPIGateway
     Type: AWS::Serverless::Function
     Properties:
+      AutoPublishAlias: latest
       CodeUri: .
       Handler: src/handlers/jwks.handler
       Runtime: nodejs24.x
@@ -264,6 +265,7 @@ Resources:
     Condition: DeployAPIGateway
     Type: AWS::Serverless::Function
     Properties:
+      AutoPublishAlias: latest
       CodeUri: .
       Handler: src/handlers/authorize.handler
       Runtime: nodejs24.x
