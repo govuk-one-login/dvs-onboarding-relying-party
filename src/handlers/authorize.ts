@@ -126,7 +126,7 @@ const buildRequestObjectWithKms = async (
       KeyId: signingKeyAlias,
       Message: Buffer.from(signingInput),
       MessageType: "RAW",
-      SigningAlgorithm: "ECDSA_SHA_256",
+      SigningAlgorithm: "RSASSA_PKCS1_V1_5_SHA_256",
     })
   );
   return `${signingInput}.${toBase64Url(Buffer.from(Signature!))}`;
