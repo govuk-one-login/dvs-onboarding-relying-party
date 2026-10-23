@@ -24,6 +24,7 @@
     "@aws-sdk/lib-dynamodb": "^3.1133.0",
     "esbuild": "^0.28.2",
     "jose": "^6.2.12",
+    "openid-client": "^6.8.8",
     "pino": "^10.4.0"
   },
   "devDependencies": {

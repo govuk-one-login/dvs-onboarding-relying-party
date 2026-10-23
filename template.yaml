@@ -21,6 +21,8 @@ Mappings:
   EnvironmentConfiguration:
     dev:
       dvsRpDomainName: dvs.dev.account.gov.uk
+      clientId: SrmBL-rlWL4vsrAIY-fgNhgsAuo
+      oidcBaseUrl: https://oidc.dev.account.gov.uk
     build:
       dvsRpDomainName: dvs.build.account.gov.uk
     staging:
@@ -283,6 +285,16 @@ Resources:
         Variables:
           ENVIRONMENT: !Sub ${Environment}
           SIGNING_KEY_ALIAS: !Ref OidcSigningKmsKeyAlias
+          CLIENT_ID: !FindInMap [ EnvironmentConfiguration, !Ref Environment, clientId ]
+          OIDC_BASE_URL: !FindInMap [ EnvironmentConfiguration, !Ref Environment, oidcBaseUrl ]
+          OIDC_AUTHORIZE_REDIRECT_URL: !Sub
+            - "https://${dvsRpDomain}/callback"
+            - dvsRpDomain:
+                !FindInMap [
+                  EnvironmentConfiguration,
+                  !Ref Environment,
+                  dvsRpDomainName,
+                ]
       Policies:
         - !Ref OidcSigningKmsKeyAccessPolicy
     Metadata:
