@@ -16,7 +16,7 @@ export const clientConfiguration = {
 };
 const baseUrl = process.env.OIDC_BASE_URL || "";
 export const serverMetadata: ServerMetadata = {
-  issuer: baseUrl,
+  issuer: `${baseUrl}/authorize`,
   authorization_endpoint: `${baseUrl}/authorize`,
   jwks_uri: `${baseUrl}/.well-known/jwks.json`,
   scopes_supported: clientConfiguration.scopes,

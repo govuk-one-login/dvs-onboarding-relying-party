@@ -36,6 +36,10 @@ export const getAuthorizeParameters =
       state: generatedState,
       code_challenge: codeChallenge,
       code_challenge_method: "S256",
+      iss: clientConfiguration.clientId,
+      client_id: clientConfiguration.clientId,
+      response_type: "code",
+      ui_locales: clientConfiguration.uiLocales,
     };
 
     const claims = clientConfiguration.claims;
