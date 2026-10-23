@@ -5,13 +5,15 @@ import { getKeyFromKms } from "./jwks-service.js";
 
 const kmsMock = mockClient(KMS);
 
-const { publicKey } = generateKeyPairSync("ec", { namedCurve: "P-256" });
-const publicKeyString = publicKey.export({ type: "spki", format: "der" });
+const rsaKey = generateKeyPairSync("rsa", {
+  modulusLength: 4096,
+}).publicKey;
+const rsaKeyString = rsaKey.export({ type: "spki", format: "der" });
 const alias = "test-key-alias";
 
 const expectedJwk = {
-  ...publicKey.export({ format: "jwk" }),
-  alg: "ES256",
+  ...rsaKey.export({ format: "jwk" }),
+  alg: "RS256",
   kid: "e1b10b31cba4835b4bcddfce3f451cff51534eee658e603d971edc4f80b37e3c", // pragma: allowlist secret
 };
 
@@ -23,7 +25,7 @@ describe("JWKS service tests", () => {
   it("should get key from KMS and create JWK", async () => {
     kmsMock.on(GetPublicKeyCommand, { KeyId: alias }).resolves({
       KeyId: alias,
-      PublicKey: new Uint8Array(publicKeyString),
+      PublicKey: new Uint8Array(rsaKeyString),
     });
 
     const actualJwk = await getKeyFromKms(alias);
@@ -37,14 +39,12 @@ describe("JWKS service tests", () => {
     await expect(getKeyFromKms(alias)).rejects.toThrow();
   });
 
-  it("should throw error if key is not EC signing key in KMS", async () => {
-    const rsaKey = generateKeyPairSync("rsa", {
-      modulusLength: 4096,
-    }).publicKey;
-    const rsaKeyString = rsaKey.export({ type: "spki", format: "der" });
+  it("should throw error if key is not RSA signing key in KMS", async () => {
+    const ecKey = generateKeyPairSync("ec", { namedCurve: "P-256" }).publicKey;
+    const ecKeyString = ecKey.export({ type: "spki", format: "der" });
     kmsMock.on(GetPublicKeyCommand, { KeyId: alias }).resolves({
       KeyId: alias,
-      PublicKey: new Uint8Array(rsaKeyString),
+      PublicKey: new Uint8Array(ecKeyString),
     });
 
     await expect(getKeyFromKms(alias)).rejects.toThrow();
