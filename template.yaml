@@ -2,6 +2,16 @@ AWSTemplateFormatVersion: "2010-09-09"
 Transform:
   - AWS::Serverless-2016-10-31
 
+Metadata:
+  cfn-lint:
+    config:
+      configure_rules:
+        E3031:
+          exceptions:
+            - none
+      ignore_checks:
+        - E3724 # The latest version of cfn-lint seems to think that CodeSigningConfigArn is not a valid parameter in Globals
+
 Parameters:
   Environment:
     Type: String
