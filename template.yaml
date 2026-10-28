@@ -71,6 +71,63 @@ Globals:
 
 Resources:
 
+  SecretsKmsKeyAlias:
+    Type: "AWS::KMS::Alias"
+    Properties:
+      AliasName: "alias/secretsKmsKey"
+      TargetKeyId: !Ref SecretsKmsKey
+
+  SecretsKmsKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: Key used to encrypt secrets
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
+            Action: kms:*
+            Resource: "*"
+          - Sid: AllowSecretsManagerAccess
+            Effect: Allow
+            Principal:
+              Service:
+                - secretsmanager.amazonaws.com
+            Action:
+              - "kms:Decrypt"
+              - "kms:GenerateDataKey"
+            Resource: "*"
+
+  LoginSecret:
+    Type: AWS::SecretsManager::Secret
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      Description: Secret for logging into the application
+      Name: !Sub "${Environment}-login-secret"
+      KmsKeyId: !Ref SecretsKmsKey
+
+  LoginSecretAccessPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: AllowGetLoginSecret
+            Effect: Allow
+            Action:
+              - secretsmanager:GetSecretValue # pragma: allowlist secret
+            Resource:
+              - !Ref LoginSecret
+          - Sid: AllowDecryptLoginSecret
+            Effect: Allow
+            Action:
+              - kms:Decrypt
+            Resource:
+              - !GetAtt SecretsKmsKey.Arn
+
   #region Oidc signing key
 
   OidcSigningKmsKeyAlias:
@@ -295,6 +352,7 @@ Resources:
           SIGNING_KEY_ALIAS: !Ref OidcSigningKmsKeyAlias
       Policies:
         - !Ref OidcSigningKmsKeyAccessPolicy
+        - !Ref LoginSecretAccessPolicy
     Metadata:
       BuildMethod: esbuild
       BuildProperties:
