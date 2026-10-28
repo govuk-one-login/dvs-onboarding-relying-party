@@ -1,0 +1,93 @@
+openapi: "3.0.1"
+info:
+  title:
+    Fn::Sub: "${AWS::StackName}-ApiGateway"
+  version: "1.0"
+paths:
+  /public/{key+}:
+    get:
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Asset
+          headers:
+            Content-Type:
+              schema:
+                type: string
+            Content-Length:
+              schema:
+                type: string
+        "403":
+          description: Not found
+          headers:
+            Content-Type:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+      x-amazon-apigateway-integration:
+        type: aws
+        httpMethod: GET
+        credentials:
+          Fn::GetAtt: [DvsPublicAssetsApiRole, Arn]
+        uri:
+          Fn::Sub: "arn:aws:apigateway:${AWS::Region}:s3:path/${DvsAssetsBucket}/{key}"
+        passthroughBehavior: when_no_match
+        requestParameters:
+          integration.request.path.key: "method.request.path.key"
+        responses:
+          default:
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Content-Type: "integration.response.header.Content-Type"
+              method.response.header.Content-Length: "integration.response.header.Content-Length"
+          "403|404":
+            statusCode: "403"
+            responseParameters:
+              method.response.header.Content-Type: "'application/json'"
+            responseTemplates:
+              application/json: "{\"message\":\"Missing Authentication Token\"}"
+
+  /.well-known/jwks.json:
+    get:
+      responses:
+        "200":
+          description: JWKS document
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        passthroughBehavior: when_no_match
+        uri:
+          Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${JwksHandler.Arn}:latest/invocations"
+
+  /authorize:
+    get:
+      responses:
+        "200":
+          description: Authorize response
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        passthroughBehavior: when_no_match
+        uri:
+          Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AuthorizeHandler.Arn}:latest/invocations"
+    post:
+      responses:
+        "200":
+          description: Authorize response
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        passthroughBehavior: when_no_match
+        uri:
+          Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AuthorizeHandler.Arn}:latest/invocations"

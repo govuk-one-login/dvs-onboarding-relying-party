@@ -11,6 +11,8 @@ Metadata:
             - none
       ignore_checks:
         - E3724 # The latest version of cfn-lint seems to think that CodeSigningConfigArn is not a valid parameter in Globals
+        - W3660 # False positive on the Asset bucket configuration
+        - W1028 # We currently have "unreachable" If conditions because they all apply to one env (testing in dev at the moment)
 
 Parameters:
   Environment:
@@ -76,6 +78,52 @@ Globals:
 
 Resources:
 
+  # region Frontend assets bucket
+  DvsAssetsBucket:
+    # checkov:skip=CKV_AWS_18: "Ensure the S3 bucket has access logging enabled"
+    Type: AWS::S3::Bucket
+    Condition: DeployAPIGateway
+    Properties:
+      BucketName: !Sub ${Environment}-frontend-assets-${AWS::AccountId}-${AWS::Region}-an
+      BucketNamespace: 'account-regional'
+      VersioningConfiguration:
+        Status: Enabled
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  DvsAssetsBucketPolicy:
+    Condition: DeployAPIGateway
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref DvsAssetsBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: MustUseSecureTransport
+            Effect: Deny
+            Principal: "*"
+            Action: "s3:*"
+            Resource:
+              - !Sub "${DvsAssetsBucket.Arn}"
+              - !Sub "${DvsAssetsBucket.Arn}/*"
+            Condition:
+              Bool:
+                "aws:SecureTransport": false
+          - Sid: MustUseAtLeastTLS1_2
+            Effect: Deny
+            Principal: "*"
+            Action: "s3:*"
+            Resource:
+              - !Sub "${DvsAssetsBucket.Arn}"
+              - !Sub "${DvsAssetsBucket.Arn}/*"
+            Condition:
+              NumericLessThan:
+                "s3:TlsVersion": "1.2"
+
+  # endregion
   SecretsKmsKeyAlias:
     Type: "AWS::KMS::Alias"
     Properties:
@@ -236,6 +284,15 @@ Resources:
       Name: !Sub ${AWS::StackName}-ApiGateway
       StageName: !Sub "${Environment}"
       AlwaysDeploy: true
+      BinaryMediaTypes:
+        - "image~1*"
+        - "font~1*"
+        - "application~1octet-stream"
+      DefinitionBody:
+        Fn::Transform:
+          Name: AWS::Include
+          Parameters:
+            Location: api-spec.yaml
 
   DvsRpApiWafAssociation:
     Condition: DeployAPIGateway
@@ -300,6 +357,33 @@ Resources:
         Types:
           - REGIONAL
 
+  DvsPublicAssetsApiRole:
+    Condition: DeployAPIGateway
+    Type: AWS::IAM::Role
+    Properties:
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: apigateway.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: ReadDvsAssetsBucket
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: s3:GetObject
+                Resource: !Sub "${DvsAssetsBucket.Arn}/*"
+              - Effect: Allow
+                Action: s3:ListBucket
+                Resource: !GetAtt DvsAssetsBucket.Arn
+
   JwksHandler:
     Condition: DeployAPIGateway
     Type: AWS::Serverless::Function
@@ -308,13 +392,6 @@ Resources:
       CodeUri: .
       Handler: src/handlers/jwks.handler
       Runtime: nodejs24.x
-      Events:
-        Get:
-          Type: Api
-          Properties:
-            RestApiId: !Ref DvsRpApiGateway
-            Path: /.well-known/jwks.json
-            Method: get
       Environment:
         Variables:
           ENVIRONMENT: !Sub ${Environment}
@@ -339,19 +416,6 @@ Resources:
       CodeUri: .
       Handler: src/handlers/authorize.handler
       Runtime: nodejs24.x
-      Events:
-        Get:
-          Type: Api
-          Properties:
-            RestApiId: !Ref DvsRpApiGateway
-            Path: /authorize
-            Method: get
-        Post:
-          Type: Api
-          Properties:
-            RestApiId: !Ref DvsRpApiGateway
-            Path: /authorize
-            Method: post
       VpcConfig:
         SecurityGroupIds:
           - !Ref LambdaSecurityGroup
@@ -386,6 +450,24 @@ Resources:
         Sourcemap: true
         Target: es2022
         UseNpmCi: True
+
+  JwksHandlerApiPermission:
+    Condition: DeployAPIGateway
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Sub "${JwksHandler.Arn}:latest"
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${DvsRpApiGateway}/*/*/.well-known/jwks.json"
+
+  AuthorizeHandlerApiPermission:
+    Condition: DeployAPIGateway
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Sub "${AuthorizeHandler.Arn}:latest"
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${DvsRpApiGateway}/*/*/authorize"
 
   HttpsEgressSecurityGroup:
     Type: AWS::EC2::SecurityGroup
