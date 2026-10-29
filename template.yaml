@@ -26,6 +26,9 @@ Parameters:
     Description: >
       The ARN of the permissions boundary to apply to any role created by the template
     Default: "none"
+  VpcStackName:
+    Type: String
+    Description: The name of the stack used to create the VPC
 
 Mappings:
   EnvironmentConfiguration:
@@ -346,6 +349,14 @@ Resources:
             RestApiId: !Ref DvsRpApiGateway
             Path: /authorize
             Method: post
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref LambdaSecurityGroup
+          - !Ref HttpsEgressSecurityGroup
+        SubnetIds:
+          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
+          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdB
+          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdC
       Environment:
         Variables:
           ENVIRONMENT: !Sub ${Environment}
@@ -362,3 +373,35 @@ Resources:
         Sourcemap: true
         Target: es2022
         UseNpmCi: True
+
+  HttpsEgressSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow egress to external services
+      VpcId:
+        Fn::ImportValue: !Sub ${VpcStackName}-VpcId
+      SecurityGroupEgress:
+        - CidrIp: 0.0.0.0/0
+          Description: Allow all outgoing HTTPS requests from security group
+          IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+
+  LambdaSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Lambda Security Group permissions ruleset
+      VpcId:
+        Fn::ImportValue: !Sub ${VpcStackName}-VpcId
+      SecurityGroupEgress:
+        - DestinationSecurityGroupId:
+            Fn::ImportValue: !Sub ${VpcStackName}-AWSServicesEndpointSecurityGroupId
+          Description: Allow outbound traffic to vpc endpoints
+          IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+        - DestinationPrefixListId: pl-b3a742da
+          Description: Allow traffic to dynamoDb
+          IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
