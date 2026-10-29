@@ -18,6 +18,7 @@ resource "aws_cloudformation_stack" "dvs_rp_pipeline_stack" {
     BuildNotificationStackName              = "build-notifications"
     SlackNotificationType                   = var.environment == "dev" ? "None" : "Failures"
     AllowedServiceOne                       = "DynamoDB"
+    AllowedServiceTwo                       = "EC2"
     ProgrammaticPermissionsBoundary         = "True"
     GitHubRepositoryID                      = var.create_build_stacks ? var.github_repository_id : ""
   }
