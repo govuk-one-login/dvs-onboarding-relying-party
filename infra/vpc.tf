@@ -13,7 +13,7 @@ resource "aws_cloudformation_stack" "vpc_stack" {
     SecretsManagerApiEnabled = "Yes" # pragma: allowlist secret
     KMSApiEnabled            = "Yes"
     DynamoDBApiEnabled       = "Yes"
-    AllowedDomains           = contains(["build"], var.environment) ? "*.account.gov.uk" : "none" # Required for acceptance tests to run when inside the VPC
+    AllowedDomains           = "*.account.gov.uk"
   }
 
   capabilities = ["CAPABILITY_NAMED_IAM", "CAPABILITY_AUTO_EXPAND"]
