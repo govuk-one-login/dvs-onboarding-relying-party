@@ -11,6 +11,7 @@ Metadata:
             - none
       ignore_checks:
         - E3724 # The latest version of cfn-lint seems to think that CodeSigningConfigArn is not a valid parameter in Globals
+        - W3660 # False positive on the Asset bucket configuration
 
 Parameters:
   Environment:
@@ -74,6 +75,42 @@ Globals:
 
 Resources:
 
+  # region Frontend assets bucket
+  DvsAssetsBucket:
+    # checkov:skip=CKV_AWS_18: "Ensure the S3 bucket has access logging enabled"
+    Type: AWS::S3::Bucket
+    Condition: DeployAPIGateway
+    Properties:
+      BucketName: !Sub ${Environment}-frontend-assets-${AWS::AccountId}-${AWS::Region}-an
+      BucketNamespace: 'account-regional'
+      VersioningConfiguration:
+        Status: Enabled
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  DvsAssetsBucketPolicy:
+    Condition: DeployAPIGateway
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref DvsAssetsBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: MustUseSecureTransport
+            Effect: Deny
+            Principal: "*"
+            Action: "s3:*"
+            Resource:
+              - !Sub "${DvsAssetsBucket.Arn}"
+              - !Sub "${DvsAssetsBucket.Arn}/*"
+            Condition:
+              Bool:
+                "aws:SecureTransport": false
+
+  # endregion
   SecretsKmsKeyAlias:
     Type: "AWS::KMS::Alias"
     Properties:
@@ -298,6 +335,79 @@ Resources:
       EndpointConfiguration:
         Types:
           - REGIONAL
+
+  # region Public assets S3 proxy
+  DvsPublicAssetsApiRole:
+    Condition: DeployAPIGateway
+    Type: AWS::IAM::Role
+    Properties:
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: apigateway.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: ReadDvsAssetsBucket
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: s3:GetObject
+                Resource: !Sub "${DvsAssetsBucket.Arn}/*"
+
+  DvsPublicResource:
+    Condition: DeployAPIGateway
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref DvsRpApiGateway
+      ParentId: !GetAtt DvsRpApiGateway.RootResourceId
+      PathPart: public
+
+  DvsPublicKeyResource:
+    Condition: DeployAPIGateway
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref DvsRpApiGateway
+      ParentId: !Ref DvsPublicResource
+      PathPart: "{key+}"
+
+  DvsPublicGetMethod:
+    Condition: DeployAPIGateway
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref DvsRpApiGateway
+      ResourceId: !Ref DvsPublicKeyResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      RequestParameters:
+        method.request.path.key: true
+      Integration:
+        Type: AWS
+        IntegrationHttpMethod: GET
+        Credentials: !GetAtt DvsPublicAssetsApiRole.Arn
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:s3:path/${DvsAssetsBucket}/{key}"
+        RequestParameters:
+          integration.request.path.key: method.request.path.key
+        IntegrationResponses:
+          - StatusCode: "200"
+            ResponseParameters:
+              method.response.header.Content-Type: integration.response.header.Content-Type
+              method.response.header.Content-Length: integration.response.header.Content-Length
+          - StatusCode: "404"
+            SelectionPattern: "403|404"
+      MethodResponses:
+        - StatusCode: "200"
+          ResponseParameters:
+            method.response.header.Content-Type: true
+            method.response.header.Content-Length: true
+        - StatusCode: "404"
+  # endregion
 
   JwksHandler:
     Condition: DeployAPIGateway
