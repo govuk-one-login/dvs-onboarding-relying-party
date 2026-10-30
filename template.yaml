@@ -34,6 +34,8 @@ Mappings:
   EnvironmentConfiguration:
     dev:
       dvsRpDomainName: dvs.dev.account.gov.uk
+      clientId: SrmBL-rlWL4vsrAIY-fgNhgsAuo
+      oidcBaseUrl: https://oidc.dev.account.gov.uk
     build:
       dvsRpDomainName: dvs.build.account.gov.uk
     staging:
@@ -133,19 +135,19 @@ Resources:
 
   #region Oidc signing key
 
-  OidcSigningKmsKeyAlias:
+  OidcSigningKmsRsaKeyAlias:
     Type: AWS::KMS::Alias
     Properties:
-      AliasName: !Sub "alias/${Environment}-oidc-kms-key-alias"
-      TargetKeyId: !Ref OidcSigningKmsKey
+      AliasName: !Sub "alias/${Environment}-oidc-kms-rsa-key-alias"
+      TargetKeyId: !Ref OidcSigningKmsRsaKey
 
-  OidcSigningKmsKey:
+  OidcSigningKmsRsaKey:
     Type: AWS::KMS::Key
     Properties:
       Description: KMS signing key for signing requests to OneLogin
       PendingWindowInDays: 30
       KeyUsage: SIGN_VERIFY
-      KeySpec: ECC_NIST_P256
+      KeySpec: RSA_4096
       KeyPolicy:
         Version: 2012-10-17
         Statement:
@@ -156,7 +158,7 @@ Resources:
             Action: kms:*
             Resource: "*"
 
-  OidcSigningKmsKeyAccessPolicy:
+  OidcSigningKmsRsaKeyAccessPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
       PolicyDocument:
@@ -168,8 +170,7 @@ Resources:
               - kms:Sign
               - kms:GetPublicKey
             Resource:
-              - !GetAtt OidcSigningKmsKey.Arn
-
+              - !GetAtt OidcSigningKmsRsaKey.Arn
   #endregion
   #region Journey Result DynamoDB Table
 
@@ -303,6 +304,7 @@ Resources:
     Condition: DeployAPIGateway
     Type: AWS::Serverless::Function
     Properties:
+      AutoPublishAlias: latest
       CodeUri: .
       Handler: src/handlers/jwks.handler
       Runtime: nodejs24.x
@@ -316,9 +318,9 @@ Resources:
       Environment:
         Variables:
           ENVIRONMENT: !Sub ${Environment}
-          SIGNING_KEY_ALIAS: !Ref OidcSigningKmsKeyAlias
+          SIGNING_KEY_ALIAS: !Ref OidcSigningKmsRsaKeyAlias
       Policies:
-        - !Ref OidcSigningKmsKeyAccessPolicy
+        - !Ref OidcSigningKmsRsaKeyAccessPolicy
     Metadata:
       BuildMethod: esbuild
       BuildProperties:
@@ -333,6 +335,7 @@ Resources:
     Condition: DeployAPIGateway
     Type: AWS::Serverless::Function
     Properties:
+      AutoPublishAlias: latest
       CodeUri: .
       Handler: src/handlers/authorize.handler
       Runtime: nodejs24.x
@@ -360,9 +363,19 @@ Resources:
       Environment:
         Variables:
           ENVIRONMENT: !Sub ${Environment}
-          SIGNING_KEY_ALIAS: !Ref OidcSigningKmsKeyAlias
+          SIGNING_KEY_ALIAS: !Ref OidcSigningKmsRsaKeyAlias
+          CLIENT_ID: !FindInMap [ EnvironmentConfiguration, !Ref Environment, clientId ]
+          OIDC_BASE_URL: !FindInMap [ EnvironmentConfiguration, !Ref Environment, oidcBaseUrl ]
+          OIDC_AUTHORIZE_REDIRECT_URL: !Sub
+            - "https://${dvsRpDomain}/callback"
+            - dvsRpDomain:
+                !FindInMap [
+                  EnvironmentConfiguration,
+                  !Ref Environment,
+                  dvsRpDomainName,
+                ]
       Policies:
-        - !Ref OidcSigningKmsKeyAccessPolicy
+        - !Ref OidcSigningKmsRsaKeyAccessPolicy
         - !Ref LoginSecretAccessPolicy
     Metadata:
       BuildMethod: esbuild
