@@ -7,7 +7,7 @@ vi.mock("../services/jwks-service.js", () => ({
 const mockedGetKeyFromKms = vi.mocked(getKeyFromKms);
 
 const alias = "test-key-alias";
-const fakeJwk = { kty: "EC", crv: "P-256", alg: "ES256", kid: "abc123" };
+const fakeJwk = { kty: "RSA", alg: "RS256", kid: "abc123" };
 let handler: typeof import("./jwks.js").handler;
 
 describe("JWKS handler tests", () => {
