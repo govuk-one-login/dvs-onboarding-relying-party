@@ -12,6 +12,7 @@ import {
 } from "openid-client";
 import { clientConfiguration } from "../config.js";
 import { buildRequestObjectWithKms } from "../services/authorize-service.js";
+import startPage from "../pages/start.html";
 
 export const handler: Handler = async (
   event: APIGatewayProxyEvent
@@ -26,15 +27,7 @@ export const handler: Handler = async (
 };
 
 const get = (): APIGatewayProxyResult => {
-  return renderResponse(
-    200,
-    `
-      <h2>DVS Micro RP</h2>
-      <form method="post" action="/authorize">
-          <input type="submit" value="Start journey"/>
-      </form>
-    `
-  );
+  return renderResponse(200, startPage);
 };
 
 const post = async (): Promise<APIGatewayProxyResult> => {

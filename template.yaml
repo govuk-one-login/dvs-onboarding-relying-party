@@ -444,6 +444,8 @@ Resources:
         Sourcemap: true
         Target: es2022
         UseNpmCi: True
+        Loader:
+          - .html=text
 
   JwksHandlerApiPermission:
     Condition: DeployAPIGateway
