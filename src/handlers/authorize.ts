@@ -13,6 +13,7 @@ import {
 import { getClientConfiguration } from "../config.js";
 import { buildRequestObjectWithKms } from "../services/authorize-service.js";
 import { createPage } from "../pages/utils.js";
+import { renderResponse } from "../utils.js";
 
 export const handler: Handler = async (
   event: APIGatewayProxyEvent
@@ -78,18 +79,5 @@ const post = async (): Promise<APIGatewayProxyResult> => {
       ),
     },
     body: "",
-  };
-};
-
-const renderResponse = (
-  statusCode: number,
-  html: string
-): APIGatewayProxyResult => {
-  return {
-    statusCode,
-    body: html,
-    headers: {
-      "Content-Type": "text/html",
-    },
   };
 };
