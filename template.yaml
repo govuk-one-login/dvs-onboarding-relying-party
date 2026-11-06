@@ -69,6 +69,8 @@ Globals:
       - !Ref AWS::NoValue
     Architectures:
       - arm64
+    MemorySize: 1536
+    Timeout: 30
 
 Resources:
 
@@ -493,6 +495,49 @@ Resources:
         Target: es2022
         UseNpmCi: True
 
+  CallbackHandler:
+    Condition: DeployAPIGateway
+    Type: AWS::Serverless::Function
+    Properties:
+      AutoPublishAlias: latest
+      CodeUri: .
+      Handler: src/handlers/callback.handler
+      Runtime: nodejs24.x
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref LambdaSecurityGroup
+          - !Ref HttpsEgressSecurityGroup
+        SubnetIds:
+          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
+          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdB
+          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdC
+      Environment:
+        Variables:
+          ENVIRONMENT: !Sub ${Environment}
+          SIGNING_KEY_ALIAS: !Ref OidcSigningKmsRsaKeyAlias
+          CLIENT_ID: !FindInMap [ EnvironmentConfiguration, !Ref Environment, clientId ]
+          OIDC_BASE_URL: !FindInMap [ EnvironmentConfiguration, !Ref Environment, oidcBaseUrl ]
+          DVS_BASE_URL: !Sub
+            - "https://${dvsRpDomain}"
+            - dvsRpDomain:
+                !FindInMap [
+                  EnvironmentConfiguration,
+                  !Ref Environment,
+                  dvsRpDomainName,
+                ]
+      Policies:
+        - !Ref OidcSigningKmsRsaKeyAccessPolicy
+        - !Ref LoginSecretAccessPolicy
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        EntryPoints:
+          - src/handlers/callback.ts
+        Minify: true
+        Sourcemap: true
+        Target: es2022
+        UseNpmCi: True
+
   JwksHandlerApiPermission:
     Condition: DeployAPIGateway
     Type: AWS::Lambda::Permission
@@ -510,6 +555,15 @@ Resources:
       FunctionName: !Sub "${AuthorizeHandler.Arn}:latest"
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${DvsRpApiGateway}/*/*/authorize"
+
+  CallbackHandlerApiPermission:
+    Condition: DeployAPIGateway
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Sub "${CallbackHandler.Arn}:latest"
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${DvsRpApiGateway}/*/*/callback"
 
   HttpsEgressSecurityGroup:
     Type: AWS::EC2::SecurityGroup
