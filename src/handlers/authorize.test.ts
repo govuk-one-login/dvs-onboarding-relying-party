@@ -66,7 +66,7 @@ describe("Authorize handler tests", () => {
     );
 
     expect(response.statusCode).toBe(200);
-    expect(response.body).toContain("Start journey");
+    expect(response.body).toContain("Start now");
   });
 
   it("should return 200 and send request to OneLogin when using method POST", async () => {

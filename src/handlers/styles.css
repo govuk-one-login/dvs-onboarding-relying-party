@@ -1,0 +1,8 @@
+.test-banner .govuk-tag {
+    color: #594d00 !important;
+    background-color: #fff7bf !important
+}
+
+.test-banner .govuk-header__container {
+    border-bottom: 10px solid #fd0
+}
