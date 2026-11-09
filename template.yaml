@@ -287,6 +287,23 @@ Resources:
           Name: AWS::Include
           Parameters:
             Location: api-spec.yaml
+      MethodSettings:
+        - CachingEnabled: false
+          DataTraceEnabled: false
+          HttpMethod: "*"
+          ResourcePath: "/*"
+          LoggingLevel: INFO
+          MetricsEnabled: true
+      TracingEnabled: true
+
+  BasicAuthAuthorizerApiPermission:
+    Condition: DeployAPIGateway
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Sub "${BasicAuthAuthorizer.Arn}:latest"
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${DvsRpApiGateway}/authorizers/*"
 
   DvsRpApiWafAssociation:
     Condition: DeployAPIGateway
@@ -397,6 +414,37 @@ Resources:
       BuildProperties:
         EntryPoints:
           - src/handlers/jwks.ts
+        Minify: true
+        Sourcemap: true
+        Target: es2022
+        UseNpmCi: True
+
+  BasicAuthAuthorizer:
+    Condition: DeployAPIGateway
+    Type: AWS::Serverless::Function
+    Properties:
+      AutoPublishAlias: latest
+      CodeUri: .
+      Handler: src/basic-auth-authorizer.handler
+      Runtime: nodejs24.x
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref LambdaSecurityGroup
+        SubnetIds:
+          - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdA
+          - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdB
+          - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdC
+      Environment:
+        Variables:
+          ENVIRONMENT: !Sub ${Environment}
+          LOGIN_SECRET_ID: !Ref LoginSecret
+      Policies:
+        - !Ref LoginSecretAccessPolicy
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        EntryPoints:
+          - src/basic-auth-authorizer.ts
         Minify: true
         Sourcemap: true
         Target: es2022

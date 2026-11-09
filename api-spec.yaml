@@ -72,6 +72,8 @@ paths:
 
   /authorize:
     get:
+      security:
+        - BasicAuthAuthorizer: []
       responses:
         "200":
           description: Authorize response
@@ -82,6 +84,8 @@ paths:
         uri:
           Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AuthorizeHandler.Arn}:latest/invocations"
     post:
+      security:
+        - BasicAuthAuthorizer: []
       responses:
         "200":
           description: Authorize response
@@ -91,3 +95,27 @@ paths:
         passthroughBehavior: when_no_match
         uri:
           Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AuthorizeHandler.Arn}:latest/invocations"
+
+components:
+  securitySchemes:
+    BasicAuthAuthorizer:
+      type: apiKey
+      name: Authorization
+      in: header
+      x-amazon-apigateway-authtype: custom
+      x-amazon-apigateway-authorizer:
+        type: request
+        identitySource: method.request.header.Authorization
+        authorizerResultTtlInSeconds: 0
+        authorizerUri:
+          Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${BasicAuthAuthorizer.Arn}:latest/invocations"
+
+x-amazon-apigateway-gateway-responses:
+  UNAUTHORIZED:
+    statusCode: 401
+    responseParameters:
+      gatewayresponse.header.WWW-Authenticate: "'Basic'"
+  ACCESS_DENIED:
+    statusCode: 401
+    responseParameters:
+      gatewayresponse.header.WWW-Authenticate: "'Basic'"
