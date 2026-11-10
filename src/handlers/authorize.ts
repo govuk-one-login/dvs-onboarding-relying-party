@@ -12,6 +12,7 @@ import {
 } from "openid-client";
 import { clientConfiguration } from "../config.js";
 import { buildRequestObjectWithKms } from "../services/authorize-service.js";
+import { createPage } from "../pages/utils.js";
 
 export const handler: Handler = async (
   event: APIGatewayProxyEvent
@@ -28,12 +29,14 @@ export const handler: Handler = async (
 const get = (): APIGatewayProxyResult => {
   return renderResponse(
     200,
-    `
-      <h2>DVS Micro RP</h2>
+    createPage(`
+      <h1 class="govuk-heading-l">Digital Verification Services</h1>
+      <p class="govuk-body">You'll need a GOV.UK One Login to use this service. You'll be able to create a GOV.UK One Login if you do not already have one.</p>
+      <p class="govuk-body">You'll be told when you sign in if you need to prove your identity. This is to keep your details safe and normally involves using photo ID like a passport or driving licence.</p>
       <form method="post" action="/authorize">
-          <input type="submit" value="Start journey"/>
+          <input type="submit" value="Start now" class="govuk-button" data-module="govuk-button"/>
       </form>
-    `
+    `)
   );
 };
 
