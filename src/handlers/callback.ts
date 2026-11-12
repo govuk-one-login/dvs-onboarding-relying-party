@@ -15,6 +15,8 @@ import { parseCookies, renderResponse } from "../utils.js";
 import { logger } from "../logger.js";
 import { makeTokenRequest } from "../services/callback-service.js";
 import { createPage, errorPage } from "../pages/utils.js";
+import { createHash } from "crypto";
+import { saveResult } from "../services/result-service.js";
 
 export const handler: Handler = async (
   event: APIGatewayProxyEvent
@@ -78,9 +80,9 @@ const get = async (
   }
 
   logger.info("Calling userinfo endpoint");
-  let _userInfo: UserInfoResponse;
+  let userInfo: UserInfoResponse;
   try {
-    _userInfo = await fetchUserInfo(
+    userInfo = await fetchUserInfo(
       oidcConfig,
       tokenResponse.access_token,
       claims.sub
@@ -91,8 +93,40 @@ const get = async (
   }
 
   logger.info("Success");
+  const clientSessionId = cookies["gs"].split(".")[1];
+  const referenceId = createHash("sha256")
+    .update(clientSessionId, "utf8")
+    .digest("base64");
+  logger.info(
+    `Generated referenceId ${referenceId} from clientSessionId ${clientSessionId}`
+  );
+  logger.info(`User info: ${JSON.stringify(userInfo)}`);
+
+  if (!userInfo.email) {
+    logger.info("Missing email in userInfo");
+    return renderResponse(400, errorPage);
+  }
+  if (!userInfo.name) {
+    logger.info("Missing name in userInfo");
+    return renderResponse(400, errorPage);
+  }
+  if (!userInfo.birthdate) {
+    logger.info("Missing birthdate in userInfo");
+    return renderResponse(400, errorPage);
+  }
+
+  await saveResult({
+    referenceId,
+    subjectId: userInfo.sub,
+    email: userInfo.email,
+    name: userInfo.name,
+    dob: userInfo.birthdate,
+  });
+
   return renderResponse(
     200,
-    createPage(`<p class="govuk-body">Success! (TODO)</p>`)
+    createPage(
+      `<p class="govuk-body">Success! Reference ID: ${referenceId}</p>`
+    )
   );
 };
