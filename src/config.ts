@@ -9,3 +9,10 @@ export const clientConfiguration = {
   uiLocales: "en",
   requireJAR: true,
 };
+
+export const getLoginSecretId = (): string => {
+  if (!process.env.LOGIN_SECRET_ID) {
+    throw new Error("Invalid configuration");
+  }
+  return process.env.LOGIN_SECRET_ID;
+};
