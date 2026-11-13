@@ -472,8 +472,8 @@ Resources:
           SIGNING_KEY_ALIAS: !Ref OidcSigningKmsRsaKeyAlias
           CLIENT_ID: !FindInMap [ EnvironmentConfiguration, !Ref Environment, clientId ]
           OIDC_BASE_URL: !FindInMap [ EnvironmentConfiguration, !Ref Environment, oidcBaseUrl ]
-          OIDC_AUTHORIZE_REDIRECT_URL: !Sub
-            - "https://${dvsRpDomain}/callback"
+          DVS_BASE_URL: !Sub
+            - "https://${dvsRpDomain}"
             - dvsRpDomain:
                 !FindInMap [
                   EnvironmentConfiguration,

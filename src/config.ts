@@ -1,8 +1,15 @@
+export const getBaseUrl = (): string => {
+  if (!process.env.DVS_BASE_URL) {
+    throw new Error("Invalid configuration");
+  }
+  return process.env.DVS_BASE_URL;
+};
+
 export const clientConfiguration = {
   clientId: process.env.CLIENT_ID || "",
   issuer: process.env.CLIENT_ID,
   scopes: ["openid", "email", "phone"],
-  redirectUrl: process.env.OIDC_AUTHORIZE_REDIRECT_URL || "",
+  redirectUrl: `${getBaseUrl()}/callback`,
   claims: ["https://vocab.account.gov.uk/v1/coreIdentityJWT"],
   tokenAuthMethod: "private_key_jwt",
   vtr: "P2.Cl.Cm",
