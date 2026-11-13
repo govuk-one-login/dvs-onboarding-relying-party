@@ -278,6 +278,29 @@ Resources:
         - Key: Name
           Value: JourneyResultTable
 
+  JourneyResultTableWritePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: AllowJourneyResultTableWriteAccess
+            Effect: Allow
+            Action:
+              - dynamodb:PutItem
+              - dynamodb:UpdateItem
+            Resource: !GetAtt JourneyResultTable.Arn
+          - Sid: AllowJourneyResultTableKeyAccess
+            Effect: Allow
+            Action:
+              - kms:Encrypt
+              - kms:Decrypt
+              - kms:ReEncrypt*
+              - kms:GenerateDataKey*
+              - kms:CreateGrant
+              - kms:DescribeKey
+            Resource: !GetAtt JourneyResultTableEncryptionKey.Arn
+
   #endregion
 
   DvsRpApiGateway:
@@ -556,6 +579,7 @@ Resources:
       Policies:
         - !Ref OidcSigningKmsRsaKeyAccessPolicy
         - !Ref LoginSecretAccessPolicy
+        - !Ref JourneyResultTableWritePolicy
     Metadata:
       BuildMethod: esbuild
       BuildProperties:
