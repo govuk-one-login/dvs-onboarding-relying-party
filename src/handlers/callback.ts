@@ -17,6 +17,9 @@ import { makeTokenRequest } from "../services/callback-service.js";
 import { createPage, errorPage } from "../pages/utils.js";
 import { createHash } from "crypto";
 import { saveResult } from "../services/result-service.js";
+import { verifyCoreIdentity } from "../services/core-identity-service.js";
+
+const CORE_IDENTITY_CLAIM = "https://vocab.account.gov.uk/v1/coreIdentityJWT";
 
 export const handler: Handler = async (
   event: APIGatewayProxyEvent
@@ -106,12 +109,23 @@ const get = async (
     logger.info("Missing email in userInfo");
     return renderResponse(400, errorPage);
   }
-  if (!userInfo.name) {
-    logger.info("Missing name in userInfo");
+
+  const coreIdentityJwt = userInfo[CORE_IDENTITY_CLAIM] as string | undefined;
+  // An empty core identity claim means GOV.UK One Login could not prove the user's identity.
+  if (!coreIdentityJwt) {
+    logger.info("Missing coreIdentityJWT in userInfo");
     return renderResponse(400, errorPage);
   }
-  if (!userInfo.birthdate) {
-    logger.info("Missing birthdate in userInfo");
+
+  let coreIdentity;
+  try {
+    coreIdentity = await verifyCoreIdentity(
+      coreIdentityJwt,
+      claims.sub,
+      getClientConfiguration().clientId
+    );
+  } catch (e) {
+    logger.error(`Failed to verify core identity: ${(e as Error).message}`);
     return renderResponse(400, errorPage);
   }
 
@@ -119,8 +133,8 @@ const get = async (
     referenceId,
     subjectId: userInfo.sub,
     email: userInfo.email,
-    name: userInfo.name,
-    dob: userInfo.birthdate,
+    name: coreIdentity.name,
+    dob: coreIdentity.dob,
   });
 
   return renderResponse(

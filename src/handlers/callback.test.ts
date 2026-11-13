@@ -25,9 +25,25 @@ vi.mock("./../services/callback-service.ts", () => {
     makeTokenRequest: vi.fn(),
   };
 });
+
+vi.mock("./../services/core-identity-service.ts", () => {
+  return {
+    verifyCoreIdentity: vi.fn(),
+  };
+});
+
+vi.mock("./../services/result-service.ts", () => {
+  return {
+    saveResult: vi.fn(),
+  };
+});
+
+const { verifyCoreIdentity } =
+  await import("../services/core-identity-service.js");
 const mockedDiscovery = vi.mocked(discovery);
 const mockedMakeTokenRequest = vi.mocked(makeTokenRequest);
 const mockedFetchUserInfo = vi.mocked(fetchUserInfo);
+const mockedVerifyCoreIdentity = vi.mocked(verifyCoreIdentity);
 const validTokenResponse = {
   access_token: "test-access-token",
   token_type: "bearer",
@@ -41,9 +57,15 @@ const validTokenResponse = {
   expiresIn: () => 12345678,
 } as oauth.TokenEndpointResponse & TokenEndpointResponseHelpers;
 const validUserInfo = {
+  sub: "test-subject",
   email: "test@email.com",
-  name: "Test Person",
+  "https://vocab.account.gov.uk/v1/coreIdentityJWT": "test-core-identity-jwt",
 } as oauth.UserInfoResponse;
+const validCoreIdentity = {
+  name: "Alice Jane Laura Doe",
+  dob: "1970-01-01",
+  vot: "P2",
+};
 
 describe("Callback handler tests", () => {
   beforeEach(async () => {
@@ -68,11 +90,12 @@ describe("Callback handler tests", () => {
   it("should return 200 with valid user info when token and user info are valid", async () => {
     mockedMakeTokenRequest.mockResolvedValue(validTokenResponse);
     mockedFetchUserInfo.mockResolvedValue(validUserInfo);
+    mockedVerifyCoreIdentity.mockResolvedValue(validCoreIdentity);
     const event = {
       httpMethod: "GET",
       path: "/callback",
       headers: {
-        cookie: "state=test-state",
+        cookie: "state=test-state; gs=test-session.test-client-session",
       },
       queryStringParameters: {
         state: "test-state",
@@ -83,6 +106,62 @@ describe("Callback handler tests", () => {
 
     expect(response.statusCode).toBe(200);
     expect(response.body).toContain(`Success!`);
+    expect(mockedVerifyCoreIdentity).toHaveBeenCalledWith(
+      "test-core-identity-jwt",
+      "test-subject",
+      "test-client-id"
+    );
+  });
+
+  it("should return 400 if coreIdentityJWT is missing from userInfo", async () => {
+    mockedMakeTokenRequest.mockResolvedValue(validTokenResponse);
+    mockedFetchUserInfo.mockResolvedValue({
+      sub: "test-subject",
+      email: "test@email.com",
+    } as oauth.UserInfoResponse);
+    const event = {
+      httpMethod: "GET",
+      path: "/callback",
+      headers: {
+        cookie: "state=test-state; gs=test-session.test-client-session",
+      },
+      queryStringParameters: {
+        state: "test-state",
+      },
+    } as unknown as APIGatewayProxyEvent;
+
+    const response = await handler(event, {} as Context, () => {});
+
+    expect(response.statusCode).toBe(400);
+    expect(response.body).toContain(
+      "Sorry, there is a problem with the service"
+    );
+    expect(mockedVerifyCoreIdentity).not.toHaveBeenCalled();
+  });
+
+  it("should return 400 if core identity verification fails", async () => {
+    mockedMakeTokenRequest.mockResolvedValue(validTokenResponse);
+    mockedFetchUserInfo.mockResolvedValue(validUserInfo);
+    mockedVerifyCoreIdentity.mockRejectedValue(
+      new Error("Invalid core identity signature")
+    );
+    const event = {
+      httpMethod: "GET",
+      path: "/callback",
+      headers: {
+        cookie: "state=test-state; gs=test-session.test-client-session",
+      },
+      queryStringParameters: {
+        state: "test-state",
+      },
+    } as unknown as APIGatewayProxyEvent;
+
+    const response = await handler(event, {} as Context, () => {});
+
+    expect(response.statusCode).toBe(400);
+    expect(response.body).toContain(
+      "Sorry, there is a problem with the service"
+    );
   });
 
   it("should return 400 if error is returned from OneLogin", async () => {

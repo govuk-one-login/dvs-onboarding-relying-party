@@ -38,23 +38,31 @@ Mappings:
       dvsRpDomainName: dvs.dev.account.gov.uk
       clientId: SrmBL-rlWL4vsrAIY-fgNhgsAuo
       oidcBaseUrl: https://oidc.dev.account.gov.uk
+      identityBaseUrl: n/a
     build:
       dvsRpDomainName: dvs.build.account.gov.uk
+      identityBaseUrl: n/a
     staging:
       dvsRpDomainName: dvs.staging.account.gov.uk
+      identityBaseUrl: https://identity.staging.account.gov.uk
     integration:
       dvsRpDomainName: dvs.integration.account.gov.uk
+      identityBaseUrl: https://identity.integration.account.gov.uk
     production:
       dvsRpDomainName: dvs.account.gov.uk
+      identityBaseUrl: https://identity.account.gov.uk
 
 Conditions:
-  UseCodeSigning:
-    !Not [!Equals [!Ref CodeSigningConfigArn, none]]
-  UsePermissionsBoundary:
-    !Not [!Equals [!Ref PermissionsBoundary, none]]
+  UseCodeSigning: !Not [!Equals [!Ref CodeSigningConfigArn, none]]
+  UsePermissionsBoundary: !Not [!Equals [!Ref PermissionsBoundary, none]]
   DeployAPIGateway: !Or [
+      !Equals [!Ref Environment, local],
+      !Equals [!Ref Environment, dev]
+    ]
+  IsStubbedEnv: !Or [
     !Equals [!Ref Environment, local],
-    !Equals [!Ref Environment, dev]
+    !Equals [!Ref Environment, dev],
+    !Equals [!Ref Environment, build]
   ]
 
 Globals:
@@ -73,7 +81,6 @@ Globals:
     Timeout: 30
 
 Resources:
-
   # region Frontend assets bucket
   DvsAssetsBucket:
     # checkov:skip=CKV_AWS_18: "Ensure the S3 bucket has access logging enabled"
@@ -81,7 +88,7 @@ Resources:
     Condition: DeployAPIGateway
     Properties:
       BucketName: !Sub ${Environment}-frontend-assets-${AWS::AccountId}-${AWS::Region}-an
-      BucketNamespace: 'account-regional'
+      BucketNamespace: "account-regional"
       VersioningConfiguration:
         Status: Enabled
       PublicAccessBlockConfiguration:
@@ -311,8 +318,7 @@ Resources:
     Condition: DeployAPIGateway
     Type: "AWS::WAFv2::WebACLAssociation"
     Properties:
-      WebACLArn:
-        !ImportValue "cloudfront-distribution-CloakingOriginWebACLArn"
+      WebACLArn: !ImportValue "cloudfront-distribution-CloakingOriginWebACLArn"
       ResourceArn: !Sub "arn:aws:apigateway:${AWS::Region}::/restapis/${DvsRpApiGateway}/stages/${Environment}"
     DependsOn:
       - DvsRpApiGatewayStage # Needs to wait for the stage created by the AWS::Serverless::Api
@@ -353,7 +359,8 @@ Resources:
     Condition: DeployAPIGateway
     Type: AWS::ApiGateway::BasePathMapping
     Properties:
-      DomainName: !FindInMap [ EnvironmentConfiguration, !Ref Environment, dvsRpDomainName ]
+      DomainName:
+        !FindInMap [EnvironmentConfiguration, !Ref Environment, dvsRpDomainName]
       RestApiId: !Ref DvsRpApiGateway
       Stage: !Sub "${Environment}"
     DependsOn:
@@ -363,7 +370,8 @@ Resources:
     Condition: DeployAPIGateway
     Type: AWS::ApiGateway::DomainName
     Properties:
-      DomainName: !FindInMap [ EnvironmentConfiguration, !Ref Environment, dvsRpDomainName ]
+      DomainName:
+        !FindInMap [EnvironmentConfiguration, !Ref Environment, dvsRpDomainName]
       SecurityPolicy: TLS_1_2
       RegionalCertificateArn: !ImportValue "certificate-CertificateARN"
       EndpointConfiguration:
@@ -472,8 +480,10 @@ Resources:
         Variables:
           ENVIRONMENT: !Sub ${Environment}
           SIGNING_KEY_ALIAS: !Ref OidcSigningKmsRsaKeyAlias
-          CLIENT_ID: !FindInMap [ EnvironmentConfiguration, !Ref Environment, clientId ]
-          OIDC_BASE_URL: !FindInMap [ EnvironmentConfiguration, !Ref Environment, oidcBaseUrl ]
+          CLIENT_ID:
+            !FindInMap [EnvironmentConfiguration, !Ref Environment, clientId]
+          OIDC_BASE_URL:
+            !FindInMap [EnvironmentConfiguration, !Ref Environment, oidcBaseUrl]
           DVS_BASE_URL: !Sub
             - "https://${dvsRpDomain}"
             - dvsRpDomain:
@@ -515,8 +525,26 @@ Resources:
         Variables:
           ENVIRONMENT: !Sub ${Environment}
           SIGNING_KEY_ALIAS: !Ref OidcSigningKmsRsaKeyAlias
-          CLIENT_ID: !FindInMap [ EnvironmentConfiguration, !Ref Environment, clientId ]
-          OIDC_BASE_URL: !FindInMap [ EnvironmentConfiguration, !Ref Environment, oidcBaseUrl ]
+          CLIENT_ID:
+            !FindInMap [
+              EnvironmentConfiguration,
+              !Ref Environment,
+              clientId
+            ]
+          OIDC_BASE_URL:
+            !FindInMap [
+              EnvironmentConfiguration,
+              !Ref Environment,
+              oidcBaseUrl
+            ]
+          IDENTITY_BASE_URL: !If
+            - IsStubbedEnv
+            - !Ref AWS::NoValue
+            - !FindInMap [
+                EnvironmentConfiguration,
+                !Ref Environment,
+                identityBaseUrl,
+              ]
           DVS_BASE_URL: !Sub
             - "https://${dvsRpDomain}"
             - dvsRpDomain:
