@@ -5,9 +5,20 @@ export const getBaseUrl = (): string => {
   return process.env.DVS_BASE_URL;
 };
 
-export const clientConfiguration = {
+type ClientConfig = {
+  clientId: string;
+  issuer: string;
+  scopes: string[];
+  redirectUrl: string;
+  claims: string[];
+  tokenAuthMethod: string;
+  vtr: string;
+  uiLocales: string;
+  requireJAR: boolean;
+};
+export const getClientConfiguration = (): ClientConfig => ({
   clientId: process.env.CLIENT_ID || "",
-  issuer: process.env.CLIENT_ID,
+  issuer: process.env.CLIENT_ID || "",
   scopes: ["openid", "email", "phone"],
   redirectUrl: `${getBaseUrl()}/callback`,
   claims: ["https://vocab.account.gov.uk/v1/coreIdentityJWT"],
@@ -15,7 +26,7 @@ export const clientConfiguration = {
   vtr: "P2.Cl.Cm",
   uiLocales: "en",
   requireJAR: true,
-};
+});
 
 export const getLoginSecretId = (): string => {
   if (!process.env.LOGIN_SECRET_ID) {
