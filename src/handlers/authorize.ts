@@ -10,9 +10,10 @@ import {
   randomPKCECodeVerifier,
   randomState,
 } from "openid-client";
-import { clientConfiguration } from "../config.js";
+import { getClientConfiguration } from "../config.js";
 import { buildRequestObjectWithKms } from "../services/authorize-service.js";
 import { createPage } from "../pages/utils.js";
+import { renderResponse } from "../utils.js";
 
 export const handler: Handler = async (
   event: APIGatewayProxyEvent
@@ -43,7 +44,7 @@ const get = (): APIGatewayProxyResult => {
 const post = async (): Promise<APIGatewayProxyResult> => {
   const oidcConfig = await discovery(
     new URL(`${process.env.OIDC_BASE_URL}`),
-    clientConfiguration.clientId
+    getClientConfiguration().clientId as string
   );
   const nonce = randomNonce();
   const state = randomState();
@@ -64,7 +65,7 @@ const post = async (): Promise<APIGatewayProxyResult> => {
   const authorizeUrl = buildAuthorizationUrl(oidcConfig, {
     request,
     response_type: "code",
-    scope: clientConfiguration.scopes.join(" "),
+    scope: getClientConfiguration().scopes.join(" "),
   });
   return {
     statusCode: 302,
@@ -78,18 +79,5 @@ const post = async (): Promise<APIGatewayProxyResult> => {
       ),
     },
     body: "",
-  };
-};
-
-const renderResponse = (
-  statusCode: number,
-  html: string
-): APIGatewayProxyResult => {
-  return {
-    statusCode,
-    body: html,
-    headers: {
-      "Content-Type": "text/html",
-    },
   };
 };

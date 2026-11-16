@@ -35,18 +35,18 @@ const mockedBuildRequestObject = vi.mocked(buildRequestObjectWithKms);
 
 describe("Authorize handler tests", () => {
   beforeEach(async () => {
-    const baseUrl = "https://localhost:4400";
+    const oidcBaseUrl = "https://localhost:4400";
     const clientId = "test-client-id";
-    process.env.OIDC_BASE_URL = baseUrl;
+    process.env.OIDC_BASE_URL = oidcBaseUrl;
     process.env.CLIENT_ID = clientId;
-    process.env.OIDC_AUTHORIZE_REDIRECT_URL = "https://localhost:5000/callback";
+    process.env.DVS_BASE_URL = "https://localhost:5000";
     handler = (await import("./authorize.js")).handler;
     mockedRandomNonce.mockReturnValue("test-nonce");
     mockedRandomState.mockReturnValue("test-state");
     mockedRandomPKCECodeVerifier.mockReturnValue("test-code-verifier");
     const serverMetadata: ServerMetadata = {
-      issuer: `${baseUrl}/authorize`,
-      authorization_endpoint: `${baseUrl}/authorize`,
+      issuer: `${oidcBaseUrl}/authorize`,
+      authorization_endpoint: `${oidcBaseUrl}/authorize`,
     };
     const config = new Configuration(serverMetadata, clientId);
     mockedDiscovery.mockResolvedValue(config);

@@ -18,7 +18,7 @@ const DATE_NOW = Date.UTC(2025, 1, 1, 12, 30);
 describe("Authorize service tests", () => {
   beforeEach(async () => {
     process.env.CLIENT_ID = "test-client-id";
-    process.env.OIDC_AUTHORIZE_REDIRECT_URL = "https://localhost:5000/callback";
+    process.env.DVS_BASE_URL = "https://localhost:5000";
     vi.useFakeTimers();
     vi.setSystemTime(DATE_NOW);
     buildRequestObjectWithKms = (await import("./authorize-service.js"))

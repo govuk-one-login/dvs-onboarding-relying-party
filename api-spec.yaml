@@ -96,6 +96,18 @@ paths:
         uri:
           Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AuthorizeHandler.Arn}:latest/invocations"
 
+  /callback:
+    get:
+      responses:
+        "200":
+          description: Callback response
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        passthroughBehavior: when_no_match
+        uri:
+          Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CallbackHandler.Arn}:latest/invocations"
+
 components:
   securitySchemes:
     BasicAuthAuthorizer:

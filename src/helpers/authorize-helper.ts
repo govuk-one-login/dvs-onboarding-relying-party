@@ -1,5 +1,5 @@
 import { calculatePKCECodeChallenge } from "openid-client";
-import { clientConfiguration } from "../config.js";
+import { getClientConfiguration } from "../config.js";
 
 export const getAuthorizeParameters = async (
   nonce: string,
@@ -9,20 +9,20 @@ export const getAuthorizeParameters = async (
   const codeChallenge = await calculatePKCECodeChallenge(codeVerifier);
 
   return {
-    redirect_uri: clientConfiguration.redirectUrl,
-    scope: clientConfiguration.scopes.join(" "),
-    vtr: JSON.stringify([clientConfiguration.vtr]),
+    redirect_uri: getClientConfiguration().redirectUrl,
+    scope: getClientConfiguration().scopes.join(" "),
+    vtr: JSON.stringify([getClientConfiguration().vtr]),
     nonce,
     state,
     code_challenge: codeChallenge,
     code_challenge_method: "S256",
-    iss: clientConfiguration.clientId,
-    client_id: clientConfiguration.clientId,
+    iss: getClientConfiguration().clientId,
+    client_id: getClientConfiguration().clientId,
     response_type: "code",
-    ui_locales: clientConfiguration.uiLocales,
+    ui_locales: getClientConfiguration().uiLocales,
     claims: JSON.stringify({
       userinfo: Object.fromEntries(
-        clientConfiguration.claims.map((claim: string) => [claim, null])
+        getClientConfiguration().claims.map((claim: string) => [claim, null])
       ),
     }),
   };

@@ -143,3 +143,8 @@ export const createPage = (content: string): string => `
 
   </html>
 `;
+
+export const errorPage = createPage(`
+  <h1 class="govuk-heading-l">Sorry, there is a problem with the service</h1>
+  <p class="govuk-body">Try again later.</p>
+`);
