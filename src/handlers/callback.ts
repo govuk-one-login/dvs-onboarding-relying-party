@@ -5,6 +5,7 @@ import {
 } from "aws-lambda";
 import {
   discovery,
+  enableNonRepudiationChecks,
   fetchUserInfo,
   TokenEndpointResponse,
   TokenEndpointResponseHelpers,
@@ -53,7 +54,10 @@ const get = async (
   logger.info("Calling discovery endpoint");
   const oidcConfig = await discovery(
     new URL(`${process.env.OIDC_BASE_URL}`),
-    getClientConfiguration().clientId
+    getClientConfiguration().clientId,
+    {},
+    undefined,
+    { execute: [enableNonRepudiationChecks] }
   );
 
   logger.info("Calling token endpoint");
