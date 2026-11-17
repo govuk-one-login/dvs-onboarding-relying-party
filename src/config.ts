@@ -28,6 +28,13 @@ export const getClientConfiguration = (): ClientConfig => ({
   requireJAR: true,
 });
 
+export const getIdentityBaseUrl = (): string => {
+  if (!process.env.IDENTITY_BASE_URL) {
+    throw new Error("Invalid configuration");
+  }
+  return process.env.IDENTITY_BASE_URL;
+};
+
 export const getLoginSecretId = (): string => {
   if (!process.env.LOGIN_SECRET_ID) {
     throw new Error("Invalid configuration");
