@@ -11,13 +11,19 @@ import {
   TokenEndpointResponseHelpers,
   UserInfoResponse,
 } from "openid-client";
-import { getClientConfiguration } from "../config.js";
+import { getClientConfiguration, isStubbedEnvironment } from "../config.js";
 import { parseCookies, renderResponse } from "../utils.js";
 import { logger } from "../logger.js";
 import { makeTokenRequest } from "../services/callback-service.js";
 import { createPage, errorPage } from "../pages/utils.js";
 import { createHash } from "crypto";
 import { saveResult } from "../services/result-service.js";
+import {
+  CoreIdentity,
+  verifyCoreIdentity,
+} from "../services/core-identity-service.js";
+
+const CORE_IDENTITY_CLAIM = "https://vocab.account.gov.uk/v1/coreIdentityJWT";
 
 export const handler: Handler = async (
   event: APIGatewayProxyEvent
@@ -113,14 +119,37 @@ const get = async (
     logger.info("Missing email in userInfo");
     return renderResponse(400, errorPage);
   }
-  // TODO: Check name and DOB exists in decoded CoreIdentityJWT
+
+  let coreIdentity: CoreIdentity;
+  if (isStubbedEnvironment()) {
+    coreIdentity = {
+      name: "Test User",
+      dob: "1970-01-01",
+    };
+  } else {
+    const coreIdentityJwt = userInfo[CORE_IDENTITY_CLAIM];
+    if (!coreIdentityJwt) {
+      logger.info("Missing coreIdentityJWT in userInfo");
+      return renderResponse(400, errorPage);
+    }
+    try {
+      coreIdentity = await verifyCoreIdentity(
+        coreIdentityJwt as string,
+        claims.sub,
+        getClientConfiguration().clientId
+      );
+    } catch (e) {
+      logger.warn(`Failed to verify core identity: ${(e as Error).message}`);
+      return renderResponse(400, errorPage);
+    }
+  }
 
   await saveResult({
     referenceId,
     subjectId: userInfo.sub,
     email: userInfo.email,
-    name: "Test User",
-    dob: "1970-01-01",
+    name: coreIdentity.name,
+    dob: coreIdentity.dob,
   });
 
   return renderResponse(

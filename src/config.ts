@@ -41,3 +41,7 @@ export const getLoginSecretId = (): string => {
   }
   return process.env.LOGIN_SECRET_ID;
 };
+
+export const isStubbedEnvironment = (): boolean => {
+  return ["local", "dev", "build"].includes(process.env.ENVIRONMENT || "local");
+};
