@@ -16,6 +16,8 @@ import { parseCookies, renderResponse } from "../utils.js";
 import { logger } from "../logger.js";
 import { makeTokenRequest } from "../services/callback-service.js";
 import { createPage, errorPage } from "../pages/utils.js";
+import { createHash } from "crypto";
+import { saveResult } from "../services/result-service.js";
 
 export const handler: Handler = async (
   event: APIGatewayProxyEvent
@@ -38,6 +40,12 @@ const get = async (
   const state = cookies["state"];
   const nonce = cookies["nonce"];
   const codeVerifier = cookies["code_verifier"];
+  const sessionCookie = cookies["gs"];
+
+  if (!sessionCookie || sessionCookie.indexOf(".") === -1) {
+    logger.error(`No client session ID present`);
+    return renderResponse(400, errorPage);
+  }
 
   const error = event.queryStringParameters?.error;
   if (error) {
@@ -82,9 +90,9 @@ const get = async (
   }
 
   logger.info("Calling userinfo endpoint");
-  let _userInfo: UserInfoResponse;
+  let userInfo: UserInfoResponse;
   try {
-    _userInfo = await fetchUserInfo(
+    userInfo = await fetchUserInfo(
       oidcConfig,
       tokenResponse.access_token,
       claims.sub
@@ -95,8 +103,32 @@ const get = async (
   }
 
   logger.info("Success");
+  const clientSessionId = sessionCookie.split(".")[1];
+  const referenceId = createHash("sha256")
+    .update(clientSessionId, "utf8")
+    .digest("base64");
+  logger.info(
+    `Generated referenceId ${referenceId} from clientSessionId ${clientSessionId}`
+  );
+
+  if (!userInfo.email) {
+    logger.info("Missing email in userInfo");
+    return renderResponse(400, errorPage);
+  }
+  // TODO: Check name and DOB exists in decoded CoreIdentityJWT
+
+  await saveResult({
+    referenceId,
+    subjectId: userInfo.sub,
+    email: userInfo.email,
+    name: "Test User",
+    dob: "1970-01-01",
+  });
+
   return renderResponse(
     200,
-    createPage(`<p class="govuk-body">Success! (TODO)</p>`)
+    createPage(
+      `<p class="govuk-body">Success! Reference ID: ${referenceId}</p>`
+    )
   );
 };
