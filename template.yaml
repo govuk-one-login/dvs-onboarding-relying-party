@@ -341,7 +341,7 @@ Resources:
         !ImportValue "cloudfront-distribution-CloakingOriginWebACLArn"
       ResourceArn: !Sub "arn:aws:apigateway:${AWS::Region}::/restapis/${DvsRpApiGateway}/stages/${Environment}"
     DependsOn:
-      - DvsRpApiGatewayStage # Needs to wait for the stage created by the AWS::Serverless::Api
+      - DvsRpApiGatewayStage
 
   DvsRpOriginRecordSet:
     Condition: DeployAPIGateway
@@ -384,6 +384,7 @@ Resources:
       Stage: !Sub "${Environment}"
     DependsOn:
       - DvsRpApiDomain
+      - DvsRpApiGatewayStage
 
   DvsRpApiDomain:
     Condition: DeployAPIGateway
