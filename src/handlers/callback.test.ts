@@ -51,8 +51,8 @@ const validTokenResponse = {
   expiresIn: () => 12345678,
 } as unknown as oauth.TokenEndpointResponse & TokenEndpointResponseHelpers;
 const validUserInfo = {
-  email: "test@email.com",
   sub: "test-subject",
+  email: "test@email.com",
 } as oauth.UserInfoResponse;
 
 describe("Callback handler tests", () => {
@@ -73,33 +73,6 @@ describe("Callback handler tests", () => {
 
   afterEach(() => {
     vi.resetAllMocks();
-  });
-
-  it("should return 200 with valid user info when token and user info are valid", async () => {
-    mockedMakeTokenRequest.mockResolvedValue(validTokenResponse);
-    mockedFetchUserInfo.mockResolvedValue(validUserInfo);
-    const event = {
-      httpMethod: "GET",
-      path: "/callback",
-      headers: {
-        cookie: "state=test-state",
-      },
-      queryStringParameters: {
-        state: "test-state",
-      },
-    } as unknown as APIGatewayProxyEvent;
-
-    const response = await handler(event, {} as Context, () => {});
-
-    expect(response.statusCode).toBe(200);
-    expect(response.body).toContain(`Success!`);
-    expect(mockedSaveResult).toHaveBeenCalledExactlyOnceWith({
-      referenceId: "z5DJHFm0YdxzeH03qoAdfkoWfmMaITiyNoGCh92XIuc=", //pragma: allowlist secret
-      subjectId: "test-subject",
-      email: "test@email.com",
-      name: "Test User",
-      dob: "1970-01-01",
-    });
   });
 
   it("should return 400 if error is returned from OneLogin", async () => {
@@ -256,5 +229,32 @@ describe("Callback handler tests", () => {
     expect(response.statusCode).toBe(405);
     expect(response.body).toStrictEqual("Method not allowed");
     expect(mockedSaveResult).not.toHaveBeenCalled();
+  });
+
+  it("should return 200 with valid user info when token and user info are valid", async () => {
+    mockedMakeTokenRequest.mockResolvedValue(validTokenResponse);
+    mockedFetchUserInfo.mockResolvedValue(validUserInfo);
+    const event = {
+      httpMethod: "GET",
+      path: "/callback",
+      headers: {
+        cookie: "state=test-state",
+      },
+      queryStringParameters: {
+        state: "test-state",
+      },
+    } as unknown as APIGatewayProxyEvent;
+
+    const response = await handler(event, {} as Context, () => {});
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toContain(`Success!`);
+    expect(mockedSaveResult).toHaveBeenCalledExactlyOnceWith({
+      referenceId: "z5DJHFm0YdxzeH03qoAdfkoWfmMaITiyNoGCh92XIuc=", //pragma: allowlist secret
+      subjectId: "test-subject",
+      email: "test@email.com",
+      name: "Test User",
+      dob: "1970-01-01",
+    });
   });
 });
