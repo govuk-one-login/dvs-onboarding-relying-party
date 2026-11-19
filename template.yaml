@@ -44,6 +44,8 @@ Mappings:
       oidcBaseUrl: https://oidc.build.account.gov.uk
     staging:
       dvsRpDomainName: dvs.staging.account.gov.uk
+      clientId: SB_7XzSjhq2fzY0S6QfaXXHtebA
+      oidcBaseUrl: https://oidc.staging.account.gov.uk
     integration:
       dvsRpDomainName: dvs.integration.account.gov.uk
     production:
@@ -57,7 +59,8 @@ Conditions:
   DeployAPIGateway: !Or [
     !Equals [!Ref Environment, local],
     !Equals [!Ref Environment, dev],
-    !Equals [!Ref Environment, build]
+    !Equals [!Ref Environment, build],
+    !Equals [!Ref Environment, staging]
   ]
 
 Globals:
