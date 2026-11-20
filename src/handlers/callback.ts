@@ -125,8 +125,17 @@ const get = async (
 
   return renderResponse(
     200,
-    createPage(
-      `<p class="govuk-body">Success! Reference ID: ${referenceId}</p>`
-    )
+    createPage(`
+      <div class="govuk-panel govuk-panel--confirmation">
+        <h1 class="govuk-panel__title">
+          Verification complete
+        </h1>
+        <div class="govuk-panel__body">
+          Your reference ID<br><strong style="word-break: break-all">${referenceId}</strong>
+        </div>
+      </div>
+
+      <h2 class="govuk-heading-m">What happens next</h2>
+      <p class="govuk-body">Please share your test result reference ID through your DVS Hub case to continue with onboarding</p>`)
   );
 };

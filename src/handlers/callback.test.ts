@@ -92,7 +92,7 @@ describe("Callback handler tests", () => {
     const response = await handler(event, {} as Context, () => {});
 
     expect(response.statusCode).toBe(200);
-    expect(response.body).toContain(`Success!`);
+    expect(response.body).toContain(`Verification complete`);
     expect(mockedSaveResult).toHaveBeenCalledExactlyOnceWith({
       referenceId: "z5DJHFm0YdxzeH03qoAdfkoWfmMaITiyNoGCh92XIuc=", //pragma: allowlist secret
       subjectId: "test-subject",
