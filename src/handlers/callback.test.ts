@@ -46,9 +46,10 @@ const validTokenResponse = {
     aud: "test-aud",
     iat: 12345670,
     exp: 12345678,
+    sid: "test-client-session-id",
   }),
   expiresIn: () => 12345678,
-} as oauth.TokenEndpointResponse & TokenEndpointResponseHelpers;
+} as unknown as oauth.TokenEndpointResponse & TokenEndpointResponseHelpers;
 const validUserInfo = {
   email: "test@email.com",
   sub: "test-subject",
@@ -58,7 +59,6 @@ describe("Callback handler tests", () => {
   beforeEach(async () => {
     const baseUrl = "https://localhost:4400";
     const clientId = "test-client-id";
-    vi.stubEnv("DVS_BASE_URL", "https://localhost:5000");
     process.env.OIDC_BASE_URL = baseUrl;
     process.env.DVS_BASE_URL = "https://localhost:5000";
     process.env.CLIENT_ID = clientId;
@@ -82,7 +82,7 @@ describe("Callback handler tests", () => {
       httpMethod: "GET",
       path: "/callback",
       headers: {
-        cookie: "state=test-state; gs=test-session-id.test-client-session-id",
+        cookie: "state=test-state",
       },
       queryStringParameters: {
         state: "test-state",
@@ -107,7 +107,7 @@ describe("Callback handler tests", () => {
       httpMethod: "GET",
       path: "/callback",
       headers: {
-        cookie: "state=test-state; gs=test-session-id.test-client-session-id",
+        cookie: "state=test-state",
       },
       queryStringParameters: {
         state: "test-state",
@@ -129,7 +129,7 @@ describe("Callback handler tests", () => {
       httpMethod: "GET",
       path: "/callback",
       headers: {
-        cookie: "state=test-state gs=test-session-id.test-client-session-id",
+        cookie: "state=test-state",
       },
       queryStringParameters: {
         state: "invalid-state",
@@ -153,7 +153,7 @@ describe("Callback handler tests", () => {
       httpMethod: "GET",
       path: "/callback",
       headers: {
-        cookie: "state=test-state gs=test-session-id.test-client-session-id",
+        cookie: "state=test-state",
       },
       queryStringParameters: {
         state: "test-state",
@@ -170,13 +170,14 @@ describe("Callback handler tests", () => {
 
   it("should return 400 if subject not present in token response", async () => {
     mockedMakeTokenRequest.mockResolvedValue({
-      claims: () => ({}),
+      claims: () =>
+        ({ sid: "test-client-session-id" }) as Record<string, oauth.JsonValue>,
     } as oauth.TokenEndpointResponse & TokenEndpointResponseHelpers);
     const event = {
       httpMethod: "GET",
       path: "/callback",
       headers: {
-        cookie: "state=test-state gs=test-session-id.test-client-session-id",
+        cookie: "state=test-state",
       },
       queryStringParameters: {
         state: "test-state",
@@ -192,33 +193,11 @@ describe("Callback handler tests", () => {
     expect(mockedSaveResult).not.toHaveBeenCalled();
   });
 
-  it("should return 400 if error is thrown when making user info request", async () => {
-    mockedMakeTokenRequest.mockResolvedValue(validTokenResponse);
-    mockedFetchUserInfo.mockThrow(
-      new Error("Timed out making user info request")
-    );
-    const event = {
-      httpMethod: "GET",
-      path: "/callback",
-      headers: {
-        cookie: "state=test-state gs=test-session-id.test-client-session-id",
-      },
-      queryStringParameters: {
-        state: "test-state",
-      },
-    } as unknown as APIGatewayProxyEvent;
-
-    const response = await handler(event, {} as Context, () => {});
-
-    expect(response.statusCode).toBe(400);
-    expect(response.body).toContain(
-      "Sorry, there is a problem with the service"
-    );
-    expect(mockedSaveResult).not.toHaveBeenCalled();
-  });
-
-  it("should return 400 if no session cookie is present in request", async () => {
-    mockedMakeTokenRequest.mockResolvedValue(validTokenResponse);
+  it("should return 400 if client session ID not present in token response", async () => {
+    mockedMakeTokenRequest.mockResolvedValue({
+      claims: () =>
+        ({ sub: "test-subject" }) as Record<string, oauth.JsonValue>,
+    } as oauth.TokenEndpointResponse & TokenEndpointResponseHelpers);
     mockedFetchUserInfo.mockResolvedValue(validUserInfo);
     const event = {
       httpMethod: "GET",
@@ -239,14 +218,16 @@ describe("Callback handler tests", () => {
     );
   });
 
-  it("should return 400 if session cookie does not contain client session ID in request", async () => {
+  it("should return 400 if error is thrown when making user info request", async () => {
     mockedMakeTokenRequest.mockResolvedValue(validTokenResponse);
-    mockedFetchUserInfo.mockResolvedValue(validUserInfo);
+    mockedFetchUserInfo.mockThrow(
+      new Error("Timed out making user info request")
+    );
     const event = {
       httpMethod: "GET",
       path: "/callback",
       headers: {
-        cookie: "state=test-state;gs=test-session-id",
+        cookie: "state=test-state",
       },
       queryStringParameters: {
         state: "test-state",
@@ -259,6 +240,7 @@ describe("Callback handler tests", () => {
     expect(response.body).toContain(
       "Sorry, there is a problem with the service"
     );
+    expect(mockedSaveResult).not.toHaveBeenCalled();
   });
 
   it("should return 405 with method not supported when using invalid method", async () => {
