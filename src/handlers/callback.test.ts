@@ -59,7 +59,6 @@ describe("Callback handler tests", () => {
   beforeEach(async () => {
     const baseUrl = "https://localhost:4400";
     const clientId = "test-client-id";
-    vi.stubEnv("DVS_BASE_URL", "https://localhost:5000");
     process.env.OIDC_BASE_URL = baseUrl;
     process.env.DVS_BASE_URL = "https://localhost:5000";
     process.env.CLIENT_ID = clientId;
