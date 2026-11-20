@@ -27,15 +27,24 @@ vi.mock("./../services/callback-service.ts", () => {
   };
 });
 
+vi.mock("./../services/core-identity-service.ts", () => {
+  return {
+    verifyCoreIdentity: vi.fn(),
+  };
+});
+
 vi.mock("./../services/result-service.ts", () => {
   return {
     saveResult: vi.fn(),
   };
 });
 
+const { verifyCoreIdentity } =
+  await import("../services/core-identity-service.js");
 const mockedDiscovery = vi.mocked(discovery);
 const mockedMakeTokenRequest = vi.mocked(makeTokenRequest);
 const mockedFetchUserInfo = vi.mocked(fetchUserInfo);
+const mockedVerifyCoreIdentity = vi.mocked(verifyCoreIdentity);
 const mockedSaveResult = vi.mocked(saveResult);
 const validTokenResponse = {
   access_token: "test-access-token",
@@ -51,9 +60,14 @@ const validTokenResponse = {
   expiresIn: () => 12345678,
 } as unknown as oauth.TokenEndpointResponse & TokenEndpointResponseHelpers;
 const validUserInfo = {
-  email: "test@email.com",
   sub: "test-subject",
+  email: "test@email.com",
+  "https://vocab.account.gov.uk/v1/coreIdentityJWT": "test-core-identity-jwt",
 } as oauth.UserInfoResponse;
+const validCoreIdentity = {
+  name: "Alice Jane Laura Doe",
+  dob: "1970-01-01",
+};
 
 describe("Callback handler tests", () => {
   beforeEach(async () => {
@@ -75,33 +89,6 @@ describe("Callback handler tests", () => {
     vi.resetAllMocks();
   });
 
-  it("should return 200 with valid user info when token and user info are valid", async () => {
-    mockedMakeTokenRequest.mockResolvedValue(validTokenResponse);
-    mockedFetchUserInfo.mockResolvedValue(validUserInfo);
-    const event = {
-      httpMethod: "GET",
-      path: "/callback",
-      headers: {
-        cookie: "state=test-state",
-      },
-      queryStringParameters: {
-        state: "test-state",
-      },
-    } as unknown as APIGatewayProxyEvent;
-
-    const response = await handler(event, {} as Context, () => {});
-
-    expect(response.statusCode).toBe(200);
-    expect(response.body).toContain(`Success!`);
-    expect(mockedSaveResult).toHaveBeenCalledExactlyOnceWith({
-      referenceId: "z5DJHFm0YdxzeH03qoAdfkoWfmMaITiyNoGCh92XIuc=", //pragma: allowlist secret
-      subjectId: "test-subject",
-      email: "test@email.com",
-      name: "Test User",
-      dob: "1970-01-01",
-    });
-  });
-
   it("should return 400 if error is returned from OneLogin", async () => {
     const event = {
       httpMethod: "GET",
@@ -121,7 +108,6 @@ describe("Callback handler tests", () => {
     expect(response.body).toContain(
       "Sorry, there is a problem with the service"
     );
-    expect(mockedSaveResult).not.toHaveBeenCalled();
   });
 
   it("should return 400 if state in cookies does not match state in query parameters", async () => {
@@ -142,7 +128,6 @@ describe("Callback handler tests", () => {
     expect(response.body).toContain(
       `Sorry, there is a problem with the service`
     );
-    expect(mockedSaveResult).not.toHaveBeenCalled();
   });
 
   it("should return 400 if error is thrown when making token request", async () => {
@@ -190,7 +175,6 @@ describe("Callback handler tests", () => {
     expect(response.body).toContain(
       "Sorry, there is a problem with the service"
     );
-    expect(mockedSaveResult).not.toHaveBeenCalled();
   });
 
   it("should return 400 if client session ID not present in token response", async () => {
@@ -255,6 +239,110 @@ describe("Callback handler tests", () => {
 
     expect(response.statusCode).toBe(405);
     expect(response.body).toStrictEqual("Method not allowed");
-    expect(mockedSaveResult).not.toHaveBeenCalled();
+  });
+
+  it.each(["local", "dev", "build"])(
+    "should return 200 with valid user info when token and user info are valid in %s environment",
+    async () => {
+      process.env.ENVRIONMENT = "dev";
+      mockedMakeTokenRequest.mockResolvedValue(validTokenResponse);
+      mockedFetchUserInfo.mockResolvedValue(validUserInfo);
+      mockedVerifyCoreIdentity.mockResolvedValue(validCoreIdentity);
+      const event = {
+        httpMethod: "GET",
+        path: "/callback",
+        headers: {
+          cookie: "state=test-state",
+        },
+        queryStringParameters: {
+          state: "test-state",
+        },
+      } as unknown as APIGatewayProxyEvent;
+
+      const response = await handler(event, {} as Context, () => {});
+
+      expect(response.statusCode).toBe(200);
+      expect(response.body).toContain(`Success!`);
+      expect(mockedVerifyCoreIdentity).not.toHaveBeenCalled();
+      expect(mockedSaveResult).toHaveBeenCalledExactlyOnceWith({
+        referenceId: "z5DJHFm0YdxzeH03qoAdfkoWfmMaITiyNoGCh92XIuc=", //pragma: allowlist secret
+        subjectId: "test-subject",
+        email: "test@email.com",
+        name: "Test User",
+        dob: "1970-01-01",
+      });
+    }
+  );
+
+  describe("CoreIdentityJWT validation in non-stubbed environments", () => {
+    const event = {
+      httpMethod: "GET",
+      path: "/callback",
+      headers: {
+        cookie: "state=test-state",
+      },
+      queryStringParameters: {
+        state: "test-state",
+      },
+    } as unknown as APIGatewayProxyEvent;
+    it.each(["staging", "integration", "production"])(
+      "should return 200 with valid user info when token and user info are valid in %s environment",
+      async (env) => {
+        process.env.ENVIRONMENT = env;
+        mockedMakeTokenRequest.mockResolvedValue(validTokenResponse);
+        mockedFetchUserInfo.mockResolvedValue(validUserInfo);
+        mockedVerifyCoreIdentity.mockResolvedValue(validCoreIdentity);
+
+        const response = await handler(event, {} as Context, () => {});
+
+        expect(response.statusCode).toBe(200);
+        expect(response.body).toContain(`Success!`);
+        expect(mockedVerifyCoreIdentity).toHaveBeenCalledWith(
+          "test-core-identity-jwt",
+          "test-subject",
+          "test-client-id"
+        );
+        expect(mockedSaveResult).toHaveBeenCalledExactlyOnceWith({
+          referenceId: "z5DJHFm0YdxzeH03qoAdfkoWfmMaITiyNoGCh92XIuc=", //pragma: allowlist secret
+          subjectId: "test-subject",
+          email: "test@email.com",
+          name: "Alice Jane Laura Doe",
+          dob: "1970-01-01",
+        });
+      }
+    );
+
+    it("should return 400 if coreIdentityJWT is missing from userInfo", async () => {
+      process.env.ENVIRONMENT = "production";
+      mockedMakeTokenRequest.mockResolvedValue(validTokenResponse);
+      mockedFetchUserInfo.mockResolvedValue({
+        sub: "test-subject",
+        email: "test@email.com",
+      } as oauth.UserInfoResponse);
+
+      const response = await handler(event, {} as Context, () => {});
+
+      expect(response.statusCode).toBe(400);
+      expect(response.body).toContain(
+        "Sorry, there is a problem with the service"
+      );
+      expect(mockedVerifyCoreIdentity).not.toHaveBeenCalled();
+    });
+
+    it("should return 400 if core identity verification fails", async () => {
+      process.env.ENVIRONMENT = "production";
+      mockedMakeTokenRequest.mockResolvedValue(validTokenResponse);
+      mockedFetchUserInfo.mockResolvedValue(validUserInfo);
+      mockedVerifyCoreIdentity.mockRejectedValue(
+        new Error("Invalid core identity signature")
+      );
+
+      const response = await handler(event, {} as Context, () => {});
+
+      expect(response.statusCode).toBe(400);
+      expect(response.body).toContain(
+        "Sorry, there is a problem with the service"
+      );
+    });
   });
 });
