@@ -40,12 +40,6 @@ const get = async (
   const state = cookies["state"];
   const nonce = cookies["nonce"];
   const codeVerifier = cookies["code_verifier"];
-  const sessionCookie = cookies["gs"];
-
-  if (!sessionCookie || sessionCookie.indexOf(".") === -1) {
-    logger.error(`No client session ID present`);
-    return renderResponse(400, errorPage);
-  }
 
   const error = event.queryStringParameters?.error;
   if (error) {
@@ -88,6 +82,10 @@ const get = async (
     logger.error("Subject not present in token response");
     return renderResponse(400, errorPage);
   }
+  if (!claims?.sid) {
+    logger.error("Client session ID not present in token response");
+    return renderResponse(400, errorPage);
+  }
 
   logger.info("Calling userinfo endpoint");
   let userInfo: UserInfoResponse;
@@ -103,7 +101,7 @@ const get = async (
   }
 
   logger.info("Success");
-  const clientSessionId = sessionCookie.split(".")[1];
+  const clientSessionId = claims.sid as string;
   const referenceId = createHash("sha256")
     .update(clientSessionId, "utf8")
     .digest("base64");
